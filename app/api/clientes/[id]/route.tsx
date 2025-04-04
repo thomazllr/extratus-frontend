@@ -5,13 +5,13 @@ const prisma = new PrismaClient();
 
 export async function DELETE(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const id = Number(context.params.id);
-
   try {
-    const cliente = await prisma.cliente.findUnique({ where: { id } });
+    const { id: paramId } = await context.params;
+    const id = BigInt(paramId);
 
+    const cliente = await prisma.cliente.findUnique({ where: { id } });
     if (!cliente) {
       return NextResponse.json(
         { error: "Cliente não encontrado" },
@@ -26,7 +26,10 @@ export async function DELETE(
   } catch (error) {
     console.error("Erro ao deletar cliente:", error);
     return NextResponse.json(
-      { error: "Erro ao deletar cliente" },
+      {
+        error:
+          error instanceof Error ? error.message : "Erro ao deletar cliente",
+      },
       { status: 500 }
     );
   }
@@ -34,9 +37,10 @@ export async function DELETE(
 
 export async function PUT(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const id = Number(context.params.id);
+  const { id: paramId } = await context.params; // ✅ corrigido
+  const id = Number(paramId);
   const data = await req.json();
 
   try {

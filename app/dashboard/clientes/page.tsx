@@ -401,15 +401,17 @@ export default function ClientesPage() {
 
                     <TableCell>
                       <div className="flex flex-wrap gap-2">
-                        {cliente.doencas?.map((doenca: string) => (
-                          <Badge
-                            key={doenca.id}
-                            variant="outline"
-                            className="border-blue-100 bg-blue-50 text-blue-600 dark:border-blue-900 dark:bg-blue-900/50 dark:text-blue-300"
-                          >
-                            {doenca.nome}
-                          </Badge>
-                        ))}
+                        {cliente.doencas?.map(
+                          (doenca: { id: string; nome: string }) => (
+                            <Badge
+                              key={doenca.id}
+                              variant="outline"
+                              className="border-blue-100 bg-blue-50 text-blue-600 dark:border-blue-900 dark:bg-blue-900/50 dark:text-blue-300"
+                            >
+                              {doenca.nome}
+                            </Badge>
+                          )
+                        )}
                       </div>
                     </TableCell>
 
