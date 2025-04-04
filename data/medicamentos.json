@@ -1,0 +1,87 @@
+[
+  {
+    "id": 1,
+    "nome": "Dipirona 500mg",
+    "categoria": "Analgésico",
+    "fabricante": "Medley",
+    "descricao": "Medicamento para alívio da dor e redução da febre.",
+    "estoque": 120,
+    "preco": 5.99,
+    "validade": "12/2025",
+    "doencasRelacionadas": ["Febre", "Dor de cabeça", "Dor muscular"],
+    "posologia": "1 comprimido a cada 6 horas, não excedendo 4 comprimidos por dia."
+  },
+  {
+    "id": 2,
+    "nome": "Amoxicilina 250mg",
+    "categoria": "Antibiótico",
+    "fabricante": "EMS",
+    "descricao": "Antibiótico de amplo espectro para tratamento de infecções bacterianas.",
+    "estoque": 45,
+    "preco": 25.5,
+    "validade": "06/2025",
+    "doencasRelacionadas": ["Infecções respiratórias", "Infecções urinárias", "Sinusite"],
+    "posologia": "1 cápsula a cada 8 horas por 7 a 10 dias, conforme orientação médica."
+  },
+  {
+    "id": 3,
+    "nome": "Ibuprofeno 400mg",
+    "categoria": "Anti-inflamatório",
+    "fabricante": "Neo Química",
+    "descricao": "Anti-inflamatório não esteroidal para alívio da dor e inflamação.",
+    "estoque": 10,
+    "preco": 12.75,
+    "validade": "03/2025",
+    "doencasRelacionadas": ["Artrite", "Dor muscular", "Febre", "Dor de cabeça"],
+    "posologia": "1 comprimido a cada 8 horas, preferencialmente após as refeições."
+  },
+  {
+    "id": 4,
+    "nome": "Loratadina 10mg",
+    "categoria": "Antialérgico",
+    "fabricante": "Cimed",
+    "descricao": "Anti-histamínico para alívio dos sintomas de alergias.",
+    "estoque": 78,
+    "preco": 15.2,
+    "validade": "09/2025",
+    "doencasRelacionadas": ["Rinite alérgica", "Urticária", "Alergias cutâneas"],
+    "posologia": "1 comprimido uma vez ao dia."
+  },
+  {
+    "id": 5,
+    "nome": "Omeprazol 20mg",
+    "categoria": "Antiácido",
+    "fabricante": "Medley",
+    "descricao": "Inibidor da bomba de prótons para tratamento de problemas gástricos.",
+    "estoque": 0,
+    "preco": 18.9,
+    "validade": "05/2025",
+    "doencasRelacionadas": ["Úlcera gástrica", "Refluxo gastroesofágico", "Gastrite"],
+    "posologia": "1 cápsula antes do café da manhã."
+  },
+  {
+    "id": 6,
+    "nome": "Paracetamol 750mg",
+    "categoria": "Analgésico",
+    "fabricante": "EMS",
+    "descricao": "Analgésico e antitérmico para alívio da dor e redução da febre.",
+    "estoque": 95,
+    "preco": 8.5,
+    "validade": "10/2025",
+    "doencasRelacionadas": ["Febre", "Dor de cabeça", "Dor muscular", "Resfriado"],
+    "posologia": "1 comprimido a cada 6 horas, não excedendo 4 comprimidos por dia."
+  },
+  {
+    "id": 7,
+    "nome": "Azitromicina 500mg",
+    "categoria": "Antibiótico",
+    "fabricante": "Neo Química",
+    "descricao": "Antibiótico macrolídeo para tratamento de infecções bacterianas.",
+    "estoque": 5,
+    "preco": 32.8,
+    "validade": "04/2025",
+    "doencasRelacionadas": ["Infecções respiratórias", "Faringite", "Sinusite", "Pneumonia"],
+    "posologia": "1 comprimido por dia durante 3 a 5 dias, conforme orientação médica."
+  }
+]
+

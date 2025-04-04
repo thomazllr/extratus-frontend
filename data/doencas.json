@@ -1,0 +1,63 @@
+[
+  {
+    "id": 1,
+    "nome": "Hipertensão",
+    "descricao": "Pressão arterial elevada que pode levar a problemas cardíacos.",
+    "sintomas": ["Dores de cabeça", "Tontura", "Visão embaçada", "Falta de ar"],
+    "tratamentos": ["Inibidores da ECA", "Bloqueadores de canais de cálcio", "Diuréticos"],
+    "medicamentosRecomendados": ["Losartana Potássica 50mg", "Anlodipino 5mg", "Hidroclorotiazida 25mg"],
+    "gravidade": "Moderada",
+    "prevencao": "Redução do consumo de sal, prática regular de exercícios físicos, controle do peso, redução do consumo de álcool."
+  },
+  {
+    "id": 2,
+    "nome": "Diabetes Tipo 2",
+    "descricao": "Condição crônica que afeta a forma como o corpo processa o açúcar no sangue.",
+    "sintomas": ["Sede excessiva", "Micção frequente", "Fadiga", "Visão embaçada"],
+    "tratamentos": ["Controle da dieta", "Exercícios físicos", "Medicamentos orais", "Insulina"],
+    "medicamentosRecomendados": ["Metformina 850mg", "Glibenclamida 5mg", "Insulina NPH"],
+    "gravidade": "Moderada",
+    "prevencao": "Manutenção de peso saudável, alimentação balanceada, prática regular de exercícios físicos."
+  },
+  {
+    "id": 3,
+    "nome": "Asma",
+    "descricao": "Condição que causa inflamação e estreitamento das vias aéreas.",
+    "sintomas": ["Falta de ar", "Chiado no peito", "Tosse", "Aperto no peito"],
+    "tratamentos": ["Broncodilatadores", "Corticosteroides inalatórios", "Evitar alérgenos"],
+    "medicamentosRecomendados": ["Salbutamol Spray", "Budesonida Inalatória", "Montelucaste 10mg"],
+    "gravidade": "Moderada",
+    "prevencao": "Evitar alérgenos conhecidos, manter ambientes limpos, vacinação contra gripe."
+  },
+  {
+    "id": 4,
+    "nome": "Enxaqueca",
+    "descricao": "Dor de cabeça intensa que pode ser acompanhada por náusea e sensibilidade à luz.",
+    "sintomas": ["Dor pulsante", "Náusea", "Sensibilidade à luz", "Visão embaçada"],
+    "tratamentos": ["Analgésicos", "Triptanos", "Repouso em ambiente escuro"],
+    "medicamentosRecomendados": ["Paracetamol 750mg", "Sumatriptana 50mg", "Naratriptana 2,5mg"],
+    "gravidade": "Leve",
+    "prevencao": "Identificar e evitar gatilhos, manter rotina de sono regular, gerenciar o estresse."
+  },
+  {
+    "id": 5,
+    "nome": "Artrite Reumatoide",
+    "descricao": "Doença autoimune que causa inflamação nas articulações.",
+    "sintomas": ["Dor nas articulações", "Rigidez", "Inchaço", "Fadiga"],
+    "tratamentos": ["Anti-inflamatórios", "Medicamentos antirreumáticos", "Fisioterapia"],
+    "medicamentosRecomendados": ["Ibuprofeno 400mg", "Metotrexato 2,5mg", "Prednisona 5mg"],
+    "gravidade": "Grave",
+    "prevencao": "Não há prevenção conhecida, mas diagnóstico e tratamento precoces podem retardar a progressão."
+  },
+  {
+    "id": 6,
+    "nome": "Doença de Alzheimer",
+    "descricao": "Doença neurodegenerativa progressiva que causa problemas de memória e cognição.",
+    "sintomas": ["Perda de memória", "Confusão", "Mudanças de humor", "Dificuldade para resolver problemas"],
+    "tratamentos": ["Medicamentos para sintomas cognitivos", "Terapia ocupacional", "Suporte familiar"],
+    "medicamentosRecomendados": ["Donepezila 5mg", "Memantina 10mg", "Rivastigmina 1,5mg"],
+    "gravidade": "Grave",
+    "prevencao": "Atividade física regular, estimulação mental, dieta saudável, controle de fatores de risco cardiovascular."
+  }
+]
+
