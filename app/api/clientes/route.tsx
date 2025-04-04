@@ -60,8 +60,12 @@ export async function GET() {
     const serialized = clientes.map((cliente) => ({
       ...cliente,
       doencas: cliente.doenca_cliente
-        .map((dc) => dc.doenca?.nome)
-        .filter(Boolean),
+        .map((dc) => ({
+          id: dc.doenca?.id,
+          nome: dc.doenca?.nome,
+          descricao: dc.doenca?.descricao,
+        }))
+        .filter((d) => d.nome && d.descricao), // só mantém doenças completas
     }));
 
     return NextResponse.json(serialize(serialized));

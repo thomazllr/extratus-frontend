@@ -43,17 +43,28 @@ import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 
 export default function ClientesPage() {
-  // Estados existentes
+  // Estados do formulário
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [telefone, setTelefone] = useState("");
   const [endereco, setEndereco] = useState("");
   const [doencas, setDoencas] = useState([]);
   const [doencasSelecionadas, setDoencasSelecionadas] = useState<number[]>([]);
+
+  // Estados da tabela e dados
   const [clientes, setClientes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Estados para modais
+  const [clienteParaVisualizar, setClienteParaVisualizar] = useState<any>(null);
+
   const [clienteSelecionado, setClienteSelecionado] = useState<any>(null);
+  const [clienteParaExcluir, setClienteParaExcluir] = useState<any>(null);
+  const [excluindo, setExcluindo] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  // Estados de validação
   const [formErrors, setFormErrors] = useState({
     nome: false,
     email: false,
@@ -61,7 +72,7 @@ export default function ClientesPage() {
     endereco: false,
   });
 
-  // Buscar dados
+  // Buscar dados iniciais
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -93,7 +104,7 @@ export default function ClientesPage() {
     return !Object.values(errors).some(Boolean);
   };
 
-  // Cadastrar cliente
+  // Manipular submit do formulário
   async function handleSubmit() {
     if (!validateForm()) {
       toast.error("Preencha todos os campos corretamente");
@@ -102,31 +113,41 @@ export default function ClientesPage() {
 
     setIsLoading(true);
     try {
-      const res = await fetch("/api/clientes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nome,
-          email,
-          telefone,
-          endereco,
-          doencas: doencasSelecionadas,
-        }),
-      });
+      const isEditing = !!clienteSelecionado;
+
+      const res = await fetch(
+        isEditing ? `/api/clientes/${clienteSelecionado.id}` : "/api/clientes",
+        {
+          method: isEditing ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nome,
+            email,
+            telefone,
+            endereco,
+            doencas: doencasSelecionadas,
+          }),
+        }
+      );
 
       if (res.ok) {
-        toast.success("Cliente cadastrado com sucesso!");
+        toast.success(
+          isEditing
+            ? "Cliente atualizado com sucesso!"
+            : "Cliente cadastrado com sucesso!"
+        );
         resetForm();
         const updatedClientes = await fetch("/api/clientes").then((r) =>
           r.json()
         );
         setClientes(updatedClientes);
+        setIsEditDialogOpen(false);
       } else {
-        toast.error("Erro ao cadastrar cliente");
+        toast.error("Erro ao salvar cliente");
       }
     } catch (err) {
       console.error(err);
-      toast.error("Erro ao cadastrar cliente");
+      toast.error("Erro ao salvar cliente");
     } finally {
       setIsLoading(false);
     }
@@ -139,6 +160,7 @@ export default function ClientesPage() {
     setTelefone("");
     setEndereco("");
     setDoencasSelecionadas([]);
+    setClienteSelecionado(null);
     setFormErrors({
       nome: false,
       email: false,
@@ -155,12 +177,25 @@ export default function ClientesPage() {
       cliente.telefone.includes(searchTerm)
   );
 
-  // Verificar se formulário está válido para habilitar botão
+  // Verificar se formulário está válido
   const isFormValid =
     nome.trim() !== "" &&
     /^\S+@\S+\.\S+$/.test(email) &&
     telefone.trim() !== "" &&
     endereco.trim() !== "";
+
+  // Abrir modal de edição
+  const handleEditClick = (cliente: any) => {
+    setClienteSelecionado(cliente);
+    setNome(cliente.nome);
+    setEmail(cliente.email);
+    setTelefone(cliente.telefone);
+    setEndereco(cliente.endereco);
+    setDoencasSelecionadas(
+      cliente.doenca_cliente?.map((d: any) => d.doenca_id) || []
+    );
+    setIsEditDialogOpen(true);
+  };
 
   return (
     <div className="space-y-6 p-6">
@@ -288,7 +323,7 @@ export default function ClientesPage() {
                   className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white"
                   disabled={isLoading || !isFormValid}
                 >
-                  {isLoading ? "Cadastrando..." : "Cadastrar"}
+                  {isLoading ? "Salvando..." : "Cadastrar"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -368,11 +403,11 @@ export default function ClientesPage() {
                       <div className="flex flex-wrap gap-2">
                         {cliente.doencas?.map((doenca: string) => (
                           <Badge
-                            key={doenca}
+                            key={doenca.id}
                             variant="outline"
                             className="border-blue-100 bg-blue-50 text-blue-600 dark:border-blue-900 dark:bg-blue-900/50 dark:text-blue-300"
                           >
-                            {doenca}
+                            {doenca.nome}
                           </Badge>
                         ))}
                       </div>
@@ -399,15 +434,21 @@ export default function ClientesPage() {
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             className="cursor-pointer"
-                            onClick={() => setClienteSelecionado(cliente)}
+                            onClick={() => setClienteParaVisualizar(cliente)}
                           >
                             <span>Visualizar</span>
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="cursor-pointer">
+                          <DropdownMenuItem
+                            className="cursor-pointer"
+                            onClick={() => handleEditClick(cliente)}
+                          >
                             <span>Editar</span>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-red-600 cursor-pointer">
+                          <DropdownMenuItem
+                            className="text-red-600 cursor-pointer"
+                            onClick={() => setClienteParaExcluir(cliente)}
+                          >
                             <span>Excluir</span>
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -431,11 +472,11 @@ export default function ClientesPage() {
 
       {/* Modal de Visualização */}
       <Dialog
-        open={!!clienteSelecionado}
-        onOpenChange={(open) => !open && setClienteSelecionado(null)}
+        open={!!clienteParaVisualizar}
+        onOpenChange={(open) => !open && setClienteParaVisualizar(null)}
       >
         <DialogContent className="sm:max-w-[600px]">
-          {clienteSelecionado && (
+          {clienteParaVisualizar && (
             <>
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
@@ -448,10 +489,10 @@ export default function ClientesPage() {
                   <Avatar className="h-16 w-16 border-2 border-blue-100 shadow">
                     <AvatarImage
                       src="/placeholder.svg"
-                      alt={clienteSelecionado.nome}
+                      alt={clienteParaVisualizar.nome}
                     />
                     <AvatarFallback className="bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 text-xl">
-                      {clienteSelecionado.nome
+                      {clienteParaVisualizar.nome
                         .split(" ")
                         .map((n: string) => n[0])
                         .join("")
@@ -461,10 +502,10 @@ export default function ClientesPage() {
                   </Avatar>
                   <div>
                     <h3 className="text-xl font-semibold">
-                      {clienteSelecionado.nome}
+                      {clienteParaVisualizar.nome}
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      ID: {clienteSelecionado.id}
+                      ID: {clienteParaVisualizar.id}
                     </p>
                   </div>
                 </div>
@@ -475,7 +516,7 @@ export default function ClientesPage() {
                       <Mail className="h-4 w-4 text-blue-500" />
                       Email
                     </h4>
-                    <p className="text-sm">{clienteSelecionado.email}</p>
+                    <p className="text-sm">{clienteParaVisualizar.email}</p>
                   </div>
 
                   <div className="space-y-2">
@@ -483,7 +524,7 @@ export default function ClientesPage() {
                       <Phone className="h-4 w-4 text-blue-500" />
                       Telefone
                     </h4>
-                    <p className="text-sm">{clienteSelecionado.telefone}</p>
+                    <p className="text-sm">{clienteParaVisualizar.telefone}</p>
                   </div>
 
                   <div className="space-y-2">
@@ -491,21 +532,25 @@ export default function ClientesPage() {
                       <MapPin className="h-4 w-4 text-blue-500" />
                       Endereço
                     </h4>
-                    <p className="text-sm">{clienteSelecionado.endereco}</p>
+                    <p className="text-sm">{clienteParaVisualizar.endereco}</p>
                   </div>
 
                   <div className="space-y-2">
                     <h4 className="font-medium">Doenças</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {clienteSelecionado.doencas?.length > 0 ? (
-                        clienteSelecionado.doencas.map((doenca: string) => (
-                          <Badge
-                            key={doenca}
-                            variant="outline"
-                            className="border-blue-100 bg-blue-50 text-blue-600 dark:border-blue-900 dark:bg-blue-900/50 dark:text-blue-300"
+                    <div className="flex flex-col gap-2">
+                      {clienteParaVisualizar.doencas?.length > 0 ? (
+                        clienteParaVisualizar.doencas.map((doenca: any) => (
+                          <div
+                            key={doenca.id}
+                            className="border border-blue-100 dark:border-blue-900 rounded p-2 bg-blue-50 dark:bg-blue-900/30"
                           >
-                            {doenca}
-                          </Badge>
+                            <p className="text-sm font-semibold text-blue-600 dark:text-blue-300">
+                              {doenca.nome}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {doenca.descricao}
+                            </p>
+                          </div>
                         ))
                       ) : (
                         <span className="text-sm text-muted-foreground">
@@ -518,6 +563,167 @@ export default function ClientesPage() {
               </div>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Edição */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle>Editar Cliente</DialogTitle>
+            <DialogDescription>
+              Edite os dados do cliente abaixo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Input
+                id="edit-nome"
+                placeholder="Nome Completo*"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                className={formErrors.nome ? "border-red-500" : ""}
+              />
+              {formErrors.nome && (
+                <p className="text-sm text-red-500">Nome é obrigatório</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Input
+                id="edit-email"
+                type="email"
+                placeholder="Email*"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={formErrors.email ? "border-red-500" : ""}
+              />
+              {formErrors.email && (
+                <p className="text-sm text-red-500">Email inválido</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Input
+                id="edit-telefone"
+                placeholder="Telefone*"
+                value={telefone}
+                onChange={(e) => setTelefone(e.target.value)}
+                className={formErrors.telefone ? "border-red-500" : ""}
+              />
+              {formErrors.telefone && (
+                <p className="text-sm text-red-500">Telefone é obrigatório</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Input
+                id="edit-endereco"
+                placeholder="Endereço*"
+                value={endereco}
+                onChange={(e) => setEndereco(e.target.value)}
+                className={formErrors.endereco ? "border-red-500" : ""}
+              />
+              {formErrors.endereco && (
+                <p className="text-sm text-red-500">Endereço é obrigatório</p>
+              )}
+            </div>
+
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Doenças</label>
+              <div className="grid gap-2 max-h-40 overflow-y-auto border rounded p-2">
+                {doencas.map((d: any) => (
+                  <label key={d.id} className="flex items-center gap-2 text-sm">
+                    <Checkbox
+                      checked={doencasSelecionadas.includes(d.id)}
+                      onCheckedChange={(checked) => {
+                        setDoencasSelecionadas((prev) =>
+                          checked
+                            ? [...prev, d.id]
+                            : prev.filter((id) => id !== d.id)
+                        );
+                      }}
+                    />
+                    {d.nome}
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white"
+              disabled={isLoading || !isFormValid}
+            >
+              {isLoading ? "Salvando..." : "Salvar Alterações"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Exclusão */}
+      <Dialog
+        open={!!clienteParaExcluir}
+        onOpenChange={(open) => !open && setClienteParaExcluir(null)}
+      >
+        <DialogContent className="sm:max-w-[420px]">
+          <DialogHeader>
+            <DialogTitle>Confirmar Exclusão</DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja excluir o cliente{" "}
+              <strong>{clienteParaExcluir?.nome}</strong>?<br />
+              Essa ação não poderá ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setClienteParaExcluir(null)}
+              disabled={excluindo}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={excluindo}
+              onClick={async () => {
+                if (!clienteParaExcluir) return;
+                setExcluindo(true);
+                try {
+                  const res = await fetch(
+                    `/api/clientes/${clienteParaExcluir.id}`,
+                    {
+                      method: "DELETE",
+                    }
+                  );
+                  if (res.ok) {
+                    toast.success("Cliente excluído com sucesso");
+                    const updatedClientes = await fetch("/api/clientes").then(
+                      (r) => r.json()
+                    );
+                    setClientes(updatedClientes);
+                    setClienteParaExcluir(null);
+                  } else {
+                    toast.error("Erro ao excluir cliente");
+                  }
+                } catch (err) {
+                  console.error(err);
+                  toast.error("Erro ao excluir cliente");
+                } finally {
+                  setExcluindo(false);
+                }
+              }}
+            >
+              {excluindo ? "Excluindo..." : "Confirmar"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
