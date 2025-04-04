@@ -7,6 +7,15 @@ const prisma = new PrismaClient();
 
 export async function POST(req: Request) {
   try {
+    const apiKey = req.headers.get("x-api-key");
+
+    if (!apiKey || apiKey !== process.env.API_KEY_REGISTRO) {
+      return NextResponse.json(
+        { error: "Chave de API inválida ou ausente." },
+        { status: 401 }
+      );
+    }
+
     const { cpf, nome, senha, is_admin = false } = await req.json();
 
     if (!cpf || !nome || !senha) {
@@ -16,10 +25,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Verifica se já existe um usuário com esse CPF
-    const existingUser = await prisma.usuario.findFirst({
-      where: { cpf },
-    });
+    const existingUser = await prisma.usuario.findFirst({ where: { cpf } });
 
     if (existingUser) {
       return NextResponse.json(
@@ -28,10 +34,8 @@ export async function POST(req: Request) {
       );
     }
 
-    // Criptografa a senha
     const hashedPassword = await bcrypt.hash(senha, 10);
 
-    // Cria o usuário
     const novoUsuario = await prisma.usuario.create({
       data: {
         cpf,
