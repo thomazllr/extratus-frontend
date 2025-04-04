@@ -645,7 +645,7 @@ export default function EstoquePage() {
                             alerta.prioridade === "alta"
                               ? "destructive"
                               : alerta.prioridade === "media"
-                              ? "warning"
+                              ? "outline"
                               : "default"
                           }
                           className="ml-2 capitalize"

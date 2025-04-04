@@ -1,7 +1,20 @@
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,9 +22,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Badge } from "@/components/ui/badge"
-import { Plus, Search, MoreHorizontal, Filter } from "lucide-react"
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Search, MoreHorizontal, Filter } from "lucide-react";
 
 export default function MedicamentosPage() {
   // Exemplo de dados de medicamentos
@@ -86,14 +99,16 @@ export default function MedicamentosPage() {
       preco: 32.8,
       validade: "04/2025",
     },
-  ]
+  ];
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Medicamentos</h1>
-          <p className="text-muted-foreground">Gerencie o catálogo de medicamentos</p>
+          <p className="text-muted-foreground">
+            Gerencie o catálogo de medicamentos
+          </p>
         </div>
         <Button className="gap-2">
           <Plus className="h-4 w-4" />
@@ -105,7 +120,11 @@ export default function MedicamentosPage() {
         <div className="flex w-full max-w-sm items-center gap-2">
           <div className="relative w-full">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input type="search" placeholder="Buscar medicamentos..." className="w-full pl-8" />
+            <Input
+              type="search"
+              placeholder="Buscar medicamentos..."
+              className="w-full pl-8"
+            />
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -144,7 +163,9 @@ export default function MedicamentosPage() {
               <SelectItem value="todos">Todas as categorias</SelectItem>
               <SelectItem value="analgesico">Analgésico</SelectItem>
               <SelectItem value="antibiotico">Antibiótico</SelectItem>
-              <SelectItem value="anti-inflamatorio">Anti-inflamatório</SelectItem>
+              <SelectItem value="anti-inflamatorio">
+                Anti-inflamatório
+              </SelectItem>
               <SelectItem value="antialergico">Antialérgico</SelectItem>
               <SelectItem value="antiacido">Antiácido</SelectItem>
             </SelectContent>
@@ -168,7 +189,9 @@ export default function MedicamentosPage() {
           <TableBody>
             {medicamentos.map((medicamento) => (
               <TableRow key={medicamento.id}>
-                <TableCell className="font-medium">{medicamento.nome}</TableCell>
+                <TableCell className="font-medium">
+                  {medicamento.nome}
+                </TableCell>
                 <TableCell>{medicamento.categoria}</TableCell>
                 <TableCell>{medicamento.fabricante}</TableCell>
                 <TableCell>
@@ -179,8 +202,8 @@ export default function MedicamentosPage() {
                         medicamento.status === "Em estoque"
                           ? "default"
                           : medicamento.status === "Estoque baixo"
-                            ? "warning"
-                            : "destructive"
+                          ? "outline"
+                          : "destructive"
                       }
                       className="ml-2"
                     >
@@ -205,7 +228,9 @@ export default function MedicamentosPage() {
                       <DropdownMenuItem>Visualizar detalhes</DropdownMenuItem>
                       <DropdownMenuItem>Atualizar estoque</DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-red-600">Excluir</DropdownMenuItem>
+                      <DropdownMenuItem className="text-red-600">
+                        Excluir
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
@@ -215,6 +240,5 @@ export default function MedicamentosPage() {
         </Table>
       </div>
     </div>
-  )
+  );
 }
-
