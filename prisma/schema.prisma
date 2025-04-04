@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model cliente {
+  id                 BigInt               @id @default(autoincrement())
+  cpf                String?              @db.VarChar(255)
+  created_at         DateTime?            @db.Timestamp(6)
+  data_nascimento    DateTime?            @db.Date
+  email              String?              @db.VarChar(255)
+  endereco           String?              @db.VarChar(255)
+  nome               String?              @db.VarChar(255)
+  telefone           String?              @db.VarChar(255)
+  updated_at         DateTime?            @db.Timestamp(6)
+  cliente_profissoes cliente_profissoes[] @ignore
+  doenca_cliente     doenca_cliente[]
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model cliente_profissoes {
+  cliente_id    BigInt
+  profissoes_id BigInt
+  profissao     profissao @relation(fields: [profissoes_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fkb4wlau9nrmpkss53pg79ji3if")
+  cliente       cliente   @relation(fields: [cliente_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fklc31nwt6b16kav8v12w2u7wdv")
+
+  @@ignore
+}
+
+model doenca {
+  id             BigInt           @id @default(autoincrement())
+  created_at     DateTime?        @db.Timestamp(6)
+  descricao      String?          @db.VarChar(255)
+  nome           String?          @db.VarChar(255)
+  updated_at     DateTime?        @db.Timestamp(6)
+  doenca_cliente doenca_cliente[]
+}
+
+model doenca_cliente {
+  id               BigInt    @id @default(autoincrement())
+  created_at       DateTime? @db.Timestamp(6)
+  data_diagnostico DateTime? @db.Date
+  updated_at       DateTime? @db.Timestamp(6)
+  cliente_id       BigInt?
+  doenca_id        BigInt?
+  doenca           doenca?   @relation(fields: [doenca_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fkawq8onyqbwe8c2sly6332wa7")
+  cliente          cliente?  @relation(fields: [cliente_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fkmivxoy2530yoynn5aj2j74ve6")
+}
+
+model estoque {
+  id         BigInt    @id @default(autoincrement())
+  created_at DateTime? @db.Timestamp(6)
+  quantidade Int?
+  updated_at DateTime? @db.Timestamp(6)
+  produto_id BigInt?
+  produto    produto?  @relation(fields: [produto_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fkh201uorwvq9pjj4dsvjyo73ft")
+}
+
+model item_venda {
+  id             BigInt    @id @default(autoincrement())
+  created_at     DateTime? @db.Timestamp(6)
+  preco_unitario Decimal?  @db.Decimal(38, 2)
+  quantidade     Int?
+  updated_at     DateTime? @db.Timestamp(6)
+  produto_id     BigInt?
+  venda_id       BigInt?
+  produto        produto?  @relation(fields: [produto_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk7wkinkvno0wlhv821hhu34y04")
+  venda          venda?    @relation(fields: [venda_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fkkiky88fkai72328rhw3r3yebx")
+}
+
+model pagamento {
+  id                BigInt         @id @default(autoincrement())
+  created_at        DateTime?      @db.Timestamp(6)
+  nome              String?        @db.VarChar(255)
+  updated_at        DateTime?      @db.Timestamp(6)
+  valor             Decimal?       @db.Decimal(38, 2)
+  tipo_pagamento_id BigInt
+  venda_id          BigInt
+  venda             venda          @relation(fields: [venda_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fkbf6syaph4vriqxw6jtfubmwc3")
+  tipo_pagamento    tipo_pagamento @relation(fields: [tipo_pagamento_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fkda44t9l6pmuqrolntvwoi1cuw")
+}
+
+model produto {
+  id         BigInt       @id @default(autoincrement())
+  created_at DateTime?    @db.Timestamp(6)
+  descricao  String?      @db.VarChar(255)
+  nome       String?      @db.VarChar(255)
+  preco      Decimal?     @db.Decimal(38, 2)
+  updated_at DateTime?    @db.Timestamp(6)
+  estoque    estoque[]
+  item_venda item_venda[]
+}
+
+model profissao {
+  id                 BigInt               @id @default(autoincrement())
+  created_at         DateTime?            @db.Timestamp(6)
+  nome               String?              @db.VarChar(255)
+  updated_at         DateTime?            @db.Timestamp(6)
+  cliente_profissoes cliente_profissoes[] @ignore
+}
+
+model tipo_pagamento {
+  id         BigInt      @id @default(autoincrement())
+  created_at DateTime?   @db.Timestamp(6)
+  nome       String?     @db.VarChar(255)
+  updated_at DateTime?   @db.Timestamp(6)
+  pagamento  pagamento[]
+}
+
+model usuario {
+  id       BigInt  @id @default(autoincrement())
+  cpf      String? @db.VarChar(255)
+  is_admin Boolean
+  nome     String? @db.VarChar(255)
+  senha    String? @db.VarChar(255)
+}
+
+model venda {
+  id         BigInt       @id
+  created_at DateTime?    @db.Timestamp(6)
+  data       DateTime?    @db.Date
+  total      Decimal?     @db.Decimal(38, 2)
+  updated_at DateTime?    @db.Timestamp(6)
+  item_venda item_venda[]
+  pagamento  pagamento[]
+}

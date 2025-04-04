@@ -1,10 +1,9 @@
 "use client";
 
 import type React from "react";
-
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -20,17 +19,39 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useCookies } from "@/hooks/use-cookies"; // Você precisará criar este hook
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 export default function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const cookies = useCookies(); // Hook para manipular cookies
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
   };
+  const handleLogout = async () => {
+    try {
+      // Remove o token do cookie
+      cookies.remove("token");
 
+      // Opcional: Chamar API de logout se necessário
+      await fetch("/api/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      router.push("/"); // Mudei para "/login" em vez de "/" para ser mais explícito
+
+      // Força um refresh completo
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Erro durante logout:", error);
+      window.location.href = "/";
+    }
+  };
   const routes = [
     {
       href: "/dashboard",
@@ -61,11 +82,6 @@ export default function Sidebar({ className }: SidebarProps) {
       href: "/dashboard/relatorios",
       icon: FileText,
       title: "Relatórios",
-    },
-    {
-      href: "/dashboard/configuracoes",
-      icon: Settings,
-      title: "Configurações",
     },
   ];
 
@@ -115,12 +131,10 @@ export default function Sidebar({ className }: SidebarProps) {
           <Button
             variant="outline"
             className="w-full justify-start gap-2"
-            asChild
+            onClick={handleLogout}
           >
-            <Link href="/">
-              <LogOut className="h-4 w-4" />
-              Sair
-            </Link>
+            <LogOut className="h-4 w-4" />
+            Sair
           </Button>
         </div>
       </div>

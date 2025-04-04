@@ -1,7 +1,8 @@
-import type { NextConfig } from "next";
+/** @type {import('next').NextConfig} */
 
-const nextConfig: NextConfig = {
-  /* config options here */
+const nextConfig = {
+  env: {
+    JWT_SECRET: process.env.JWT_SECRET, // <-- isso aqui é o que expõe ao middleware
+  },
 };
-
 export default nextConfig;
