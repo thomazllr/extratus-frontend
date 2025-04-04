@@ -1,9 +1,22 @@
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -12,8 +25,8 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
-} from "@/components/ui/dialog"
-import { Badge } from "@/components/ui/badge"
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertCircle,
   ArrowDownCircle,
@@ -25,7 +38,7 @@ import {
   Plus,
   Search,
   Trash,
-} from "lucide-react"
+} from "lucide-react";
 
 export default function EstoquePage() {
   // Exemplo de dados de estoque
@@ -80,7 +93,7 @@ export default function EstoquePage() {
       status: "Sem estoque",
       ultimaAtualizacao: "01/06/2023",
     },
-  ]
+  ];
 
   const movimentacoes = [
     {
@@ -128,7 +141,7 @@ export default function EstoquePage() {
       responsavel: "Lucas Ferreira",
       observacao: "Venda para cliente",
     },
-  ]
+  ];
 
   const alertas = [
     {
@@ -171,14 +184,16 @@ export default function EstoquePage() {
       data: "18/06/2023",
       prioridade: "media",
     },
-  ]
+  ];
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Estoque</h1>
-          <p className="text-muted-foreground">Gerencie o estoque de medicamentos</p>
+          <p className="text-muted-foreground">
+            Gerencie o estoque de medicamentos
+          </p>
         </div>
         <div className="flex gap-2">
           <Dialog>
@@ -191,7 +206,9 @@ export default function EstoquePage() {
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>Exportar Relatório de Estoque</DialogTitle>
-                <DialogDescription>Selecione o formato e os dados que deseja exportar.</DialogDescription>
+                <DialogDescription>
+                  Selecione o formato e os dados que deseja exportar.
+                </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
@@ -219,8 +236,12 @@ export default function EstoquePage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="todos">Todos os dados</SelectItem>
-                      <SelectItem value="estoque_atual">Apenas estoque atual</SelectItem>
-                      <SelectItem value="movimentacoes">Apenas movimentações</SelectItem>
+                      <SelectItem value="estoque_atual">
+                        Apenas estoque atual
+                      </SelectItem>
+                      <SelectItem value="movimentacoes">
+                        Apenas movimentações
+                      </SelectItem>
                       <SelectItem value="alertas">Apenas alertas</SelectItem>
                     </SelectContent>
                   </Select>
@@ -235,9 +256,13 @@ export default function EstoquePage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="ultimo_mes">Último mês</SelectItem>
-                      <SelectItem value="ultimos_3_meses">Últimos 3 meses</SelectItem>
+                      <SelectItem value="ultimos_3_meses">
+                        Últimos 3 meses
+                      </SelectItem>
                       <SelectItem value="ultimo_ano">Último ano</SelectItem>
-                      <SelectItem value="personalizado">Personalizado</SelectItem>
+                      <SelectItem value="personalizado">
+                        Personalizado
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -257,7 +282,9 @@ export default function EstoquePage() {
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>Registrar Movimentação</DialogTitle>
-                <DialogDescription>Registre uma entrada ou saída de medicamentos no estoque.</DialogDescription>
+                <DialogDescription>
+                  Registre uma entrada ou saída de medicamentos no estoque.
+                </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
@@ -270,9 +297,15 @@ export default function EstoquePage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="dipirona">Dipirona 500mg</SelectItem>
-                      <SelectItem value="amoxicilina">Amoxicilina 250mg</SelectItem>
-                      <SelectItem value="ibuprofeno">Ibuprofeno 400mg</SelectItem>
-                      <SelectItem value="loratadina">Loratadina 10mg</SelectItem>
+                      <SelectItem value="amoxicilina">
+                        Amoxicilina 250mg
+                      </SelectItem>
+                      <SelectItem value="ibuprofeno">
+                        Ibuprofeno 400mg
+                      </SelectItem>
+                      <SelectItem value="loratadina">
+                        Loratadina 10mg
+                      </SelectItem>
                       <SelectItem value="omeprazol">Omeprazol 20mg</SelectItem>
                     </SelectContent>
                   </Select>
@@ -295,7 +328,12 @@ export default function EstoquePage() {
                   <label htmlFor="quantidade" className="text-sm font-medium">
                     Quantidade
                   </label>
-                  <Input id="quantidade" type="number" min="1" placeholder="Quantidade" />
+                  <Input
+                    id="quantidade"
+                    type="number"
+                    min="1"
+                    placeholder="Quantidade"
+                  />
                 </div>
                 <div className="grid gap-2">
                   <label htmlFor="observacao" className="text-sm font-medium">
@@ -315,21 +353,29 @@ export default function EstoquePage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total em Estoque</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Total em Estoque
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">253</div>
-            <p className="text-xs text-muted-foreground">5 categorias diferentes</p>
+            <p className="text-xs text-muted-foreground">
+              5 categorias diferentes
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Entradas (Mês)</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Entradas (Mês)
+            </CardTitle>
             <ArrowDownCircle className="h-4 w-4 text-teal-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">80</div>
-            <p className="text-xs text-muted-foreground">+15% em relação ao mês anterior</p>
+            <p className="text-xs text-muted-foreground">
+              +15% em relação ao mês anterior
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -339,17 +385,23 @@ export default function EstoquePage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">30</div>
-            <p className="text-xs text-muted-foreground">+8% em relação ao mês anterior</p>
+            <p className="text-xs text-muted-foreground">
+              +8% em relação ao mês anterior
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Alertas Ativos</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Alertas Ativos
+            </CardTitle>
             <AlertCircle className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">5</div>
-            <p className="text-xs text-muted-foreground">3 de alta prioridade</p>
+            <p className="text-xs text-muted-foreground">
+              3 de alta prioridade
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -365,7 +417,11 @@ export default function EstoquePage() {
             <div className="flex w-full max-w-sm items-center gap-2">
               <div className="relative w-full">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input type="search" placeholder="Buscar medicamentos..." className="w-full pl-8" />
+                <Input
+                  type="search"
+                  placeholder="Buscar medicamentos..."
+                  className="w-full pl-8"
+                />
               </div>
               <Button variant="outline" size="icon">
                 <Filter className="h-4 w-4" />
@@ -392,7 +448,9 @@ export default function EstoquePage() {
                   <SelectItem value="todos">Todas as categorias</SelectItem>
                   <SelectItem value="analgesico">Analgésico</SelectItem>
                   <SelectItem value="antibiotico">Antibiótico</SelectItem>
-                  <SelectItem value="anti-inflamatorio">Anti-inflamatório</SelectItem>
+                  <SelectItem value="anti-inflamatorio">
+                    Anti-inflamatório
+                  </SelectItem>
                   <SelectItem value="antialergico">Antialérgico</SelectItem>
                   <SelectItem value="antiacido">Antiácido</SelectItem>
                 </SelectContent>
@@ -415,7 +473,9 @@ export default function EstoquePage() {
               <TableBody>
                 {estoqueAtual.map((item) => (
                   <TableRow key={item.id}>
-                    <TableCell className="font-medium">{item.medicamento}</TableCell>
+                    <TableCell className="font-medium">
+                      {item.medicamento}
+                    </TableCell>
                     <TableCell>{item.categoria}</TableCell>
                     <TableCell>{item.quantidade}</TableCell>
                     <TableCell>{item.lote}</TableCell>
@@ -426,8 +486,8 @@ export default function EstoquePage() {
                           item.status === "Em estoque"
                             ? "default"
                             : item.status === "Estoque baixo"
-                              ? "warning"
-                              : "destructive"
+                            ? "outline"
+                            : "destructive"
                         }
                       >
                         {item.status}
@@ -445,7 +505,11 @@ export default function EstoquePage() {
             <div className="flex w-full max-w-sm items-center gap-2">
               <div className="relative w-full">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input type="search" placeholder="Buscar movimentações..." className="w-full pl-8" />
+                <Input
+                  type="search"
+                  placeholder="Buscar movimentações..."
+                  className="w-full pl-8"
+                />
               </div>
               <Button variant="outline" size="icon">
                 <Filter className="h-4 w-4" />
@@ -484,7 +548,9 @@ export default function EstoquePage() {
               <TableBody>
                 {movimentacoes.map((item) => (
                   <TableRow key={item.id}>
-                    <TableCell className="font-medium">{item.medicamento}</TableCell>
+                    <TableCell className="font-medium">
+                      {item.medicamento}
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         {item.tipo === "entrada" ? (
@@ -510,7 +576,11 @@ export default function EstoquePage() {
             <div className="flex w-full max-w-sm items-center gap-2">
               <div className="relative w-full">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input type="search" placeholder="Buscar alertas..." className="w-full pl-8" />
+                <Input
+                  type="search"
+                  placeholder="Buscar alertas..."
+                  className="w-full pl-8"
+                />
               </div>
               <Button variant="outline" size="icon">
                 <Filter className="h-4 w-4" />
@@ -537,7 +607,9 @@ export default function EstoquePage() {
                   <SelectItem value="todos">Todos os tipos</SelectItem>
                   <SelectItem value="estoque_baixo">Estoque baixo</SelectItem>
                   <SelectItem value="sem_estoque">Sem estoque</SelectItem>
-                  <SelectItem value="proxima_validade">Próximo ao vencimento</SelectItem>
+                  <SelectItem value="proxima_validade">
+                    Próximo ao vencimento
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -550,8 +622,8 @@ export default function EstoquePage() {
                   alerta.prioridade === "alta"
                     ? "border-red-200 bg-red-50"
                     : alerta.prioridade === "media"
-                      ? "border-amber-200 bg-amber-50"
-                      : "border-blue-200 bg-blue-50"
+                    ? "border-amber-200 bg-amber-50"
+                    : "border-blue-200 bg-blue-50"
                 }
               >
                 <CardContent className="p-4">
@@ -563,8 +635,8 @@ export default function EstoquePage() {
                             alerta.prioridade === "alta"
                               ? "h-5 w-5 text-red-500"
                               : alerta.prioridade === "media"
-                                ? "h-5 w-5 text-amber-500"
-                                : "h-5 w-5 text-blue-500"
+                              ? "h-5 w-5 text-amber-500"
+                              : "h-5 w-5 text-blue-500"
                           }
                         />
                         <h4 className="font-semibold">{alerta.medicamento}</h4>
@@ -573,8 +645,8 @@ export default function EstoquePage() {
                             alerta.prioridade === "alta"
                               ? "destructive"
                               : alerta.prioridade === "media"
-                                ? "warning"
-                                : "default"
+                              ? "warning"
+                              : "default"
                           }
                           className="ml-2 capitalize"
                         >
@@ -599,6 +671,5 @@ export default function EstoquePage() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }
-
