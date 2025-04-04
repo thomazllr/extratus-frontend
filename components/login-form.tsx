@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react"; // Adicionei o useEffect
 import { useRouter } from "next/navigation";
 import { LockKeyhole, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,26 +23,63 @@ export default function LoginForm() {
   const [error, setError] = useState("");
   const router = useRouter();
 
+  // Função para aplicar a máscara de CPF
+  const formatCPF = (value: string) => {
+    // Remove tudo que não é dígito
+    const numericValue = value.replace(/\D/g, "");
+
+    // Aplica a máscara: 000.000.000-00
+    let formattedValue = numericValue;
+    if (numericValue.length > 3) {
+      formattedValue = `${numericValue.slice(0, 3)}.${numericValue.slice(3)}`;
+    }
+    if (numericValue.length > 6) {
+      formattedValue = `${formattedValue.slice(0, 7)}.${formattedValue.slice(
+        7
+      )}`;
+    }
+    if (numericValue.length > 9) {
+      formattedValue = `${formattedValue.slice(0, 11)}-${formattedValue.slice(
+        11,
+        13
+      )}`;
+    }
+
+    return formattedValue;
+  };
+
+  const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formattedValue = formatCPF(e.target.value);
+    setCpf(formattedValue);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
 
     try {
+      // Envia o CPF com a máscara (como string)
       const res = await fetch("/api/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cpf, senha }),
-        credentials: "include", // <--- ESSENCIAL!
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          cpf, // Envia com a máscara (ex: "123.456.789-09")
+          senha,
+        }),
+        credentials: "include",
       });
 
-      const data = await res.json();
-
       if (!res.ok) {
-        setError(data.error || "Erro ao fazer login");
-      } else {
-        router.push("/dashboard"); // Changed from "/" to "/dashboard"
+        const errorData = await res.json().catch(() => ({}));
+        setError(errorData.error || "Erro ao fazer login");
+        return;
       }
+
+      const data = await res.json();
+      router.push("/dashboard");
     } catch (err) {
       setError("Erro de conexão com o servidor");
     } finally {
@@ -71,7 +108,8 @@ export default function LoginForm() {
                 placeholder="000.000.000-00"
                 className="pl-10"
                 value={cpf}
-                onChange={(e) => setCpf(e.target.value)}
+                onChange={handleCpfChange}
+                maxLength={14} // 11 dígitos + 3 caracteres especiais
                 required
               />
             </div>
