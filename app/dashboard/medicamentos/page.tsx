@@ -31,18 +31,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { useProdutos } from "@/hooks/use-produtos";
 
 export default function MedicamentosPage() {
-  const [produtos, setProdutos] = useState<
-    {
-      id: number;
-      nome: string;
-      descricao: string;
-      preco: number;
-      categoria: string;
-      estoque: { quantidade: number }[];
-    }[]
-  >([]);
+  const { produtos, fetchProdutos } = useProdutos();
+  const [isLoading, setIsLoading] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -84,7 +77,6 @@ export default function MedicamentosPage() {
       categoria: "analgésico",
     });
   };
-
   const handleSubmit = async () => {
     if (!form.nome || !form.descricao || !form.preco || !form.quantidade) {
       toast.error("Preencha todos os campos obrigatórios");
@@ -93,21 +85,31 @@ export default function MedicamentosPage() {
 
     setIsSaving(true);
     try {
-      await new Promise((r) => setTimeout(r, 1000));
+      const response = await fetch("/api/produtos", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nome: form.nome,
+          descricao: form.descricao,
+          preco: parseFloat(form.preco),
+          categoria: form.categoria,
+          quantidade: parseInt(form.quantidade),
+        }),
+      });
 
-      const novoProduto = {
-        id: Date.now(),
-        nome: form.nome,
-        descricao: form.descricao,
-        preco: parseFloat(form.preco),
-        categoria: form.categoria,
-        estoque: [{ quantidade: parseInt(form.quantidade) }],
-      };
+      if (!response.ok) {
+        throw new Error("Erro ao cadastrar medicamento");
+      }
 
-      setProdutos((prev) => [...prev, novoProduto]);
       toast.success("Medicamento cadastrado com sucesso!");
       resetForm();
       setIsDialogOpen(false);
+      await fetchProdutos(); // 👈 atualiza lista com dados do banco
+    } catch (err) {
+      toast.error("Erro ao salvar medicamento");
+      console.error(err);
     } finally {
       setIsSaving(false);
     }
@@ -121,16 +123,28 @@ export default function MedicamentosPage() {
   const confirmarExclusao = async () => {
     if (produtoSelecionado !== null) {
       setIsDeleting(produtoSelecionado);
-      await new Promise((r) => setTimeout(r, 1000));
 
-      setProdutos((prev) => prev.filter((p) => p.id !== produtoSelecionado));
-      toast.success("Medicamento excluído.");
-      setProdutoSelecionado(null);
-      setIsConfirmDialogOpen(false);
-      setIsDeleting(null);
+      try {
+        const response = await fetch(`/api/produtos/${produtoSelecionado}`, {
+          method: "DELETE",
+        });
+
+        if (!response.ok) {
+          throw new Error("Erro ao excluir o medicamento");
+        }
+
+        toast.success("Medicamento excluído com sucesso.");
+        await fetchProdutos(); // 👈 Atualiza lista com dados reais do banco
+      } catch (err) {
+        toast.error("Erro ao excluir o medicamento.");
+        console.error(err);
+      } finally {
+        setProdutoSelecionado(null);
+        setIsConfirmDialogOpen(false);
+        setIsDeleting(null);
+      }
     }
   };
-
   const abrirDetalhesProduto = (produto: (typeof produtos)[0]) => {
     setProdutoDetalhado(produto);
     setIsDetailDialogOpen(true);
@@ -300,17 +314,25 @@ export default function MedicamentosPage() {
       </Card>
 
       {/* Tabela */}
-      <Card>
-        <div className="overflow-auto">
-          <Table className="min-w-[700px] text-sm">
-            <TableHeader>
-              <TableRow className="bg-gradient-to-r from-indigo-100 to-blue-100 text-indigo-900">
-                <TableHead>Nome</TableHead>
-                <TableHead>Descrição</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead>Estoque</TableHead>
-                <TableHead className="text-right">Preço</TableHead>
-                <TableHead className="text-center">Ações</TableHead>
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      ) : (
+        <div className="rounded-lg border shadow-sm bg-white dark:bg-gray-900 overflow-hidden">
+          <Table>
+            <TableHeader className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
+              <TableRow>
+                <TableHead className="font-semibold">Nome</TableHead>
+                <TableHead className="font-semibold">Descrição</TableHead>
+                <TableHead className="font-semibold">Categoria</TableHead>
+                <TableHead className="font-semibold">Estoque</TableHead>
+                <TableHead className="text-right font-semibold">
+                  Preço
+                </TableHead>
+                <TableHead className="text-right font-semibold">
+                  Ações
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -318,19 +340,25 @@ export default function MedicamentosPage() {
                 filteredProducts.map((p) => (
                   <TableRow
                     key={p.id}
-                    className="hover:bg-blue-50/50 transition"
+                    className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                   >
-                    <TableCell>💊 {p.nome}</TableCell>
-                    <TableCell className="line-clamp-1">
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <div className="text-blue-500">💊</div>
+                        <div className="font-medium">{p.nome}</div>
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="line-clamp-1 text-muted-foreground">
                       {p.descricao}
                     </TableCell>
+
                     <TableCell>
-                      <Badge
-                        className={`text-xs ${getCategoryColor(p.categoria)}`}
-                      >
+                      <Badge className={`${getCategoryColor(p.categoria)}`}>
                         {p.categoria}
                       </Badge>
                     </TableCell>
+
                     <TableCell>
                       <Badge
                         variant={
@@ -340,29 +368,30 @@ export default function MedicamentosPage() {
                             ? "outline"
                             : "secondary"
                         }
-                        className="text-xs"
                       >
                         {p.estoque[0]?.quantidade ?? 0} unid.
                       </Badge>
                     </TableCell>
+
                     <TableCell className="text-right text-blue-700 font-medium">
                       💰 R$ {p.preco.toFixed(2).replace(".", ",")}
                     </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex justify-center gap-2">
+
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
                         <Button
-                          variant="outline"
-                          size="sm"
+                          variant="ghost"
+                          size="icon"
                           onClick={() => abrirDetalhesProduto(p)}
-                          className="h-8 w-8 p-0"
+                          className="hover:bg-gray-100 dark:hover:bg-gray-700 h-8 w-8 p-0"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Button
-                          variant="destructive"
-                          size="sm"
+                          variant="ghost"
+                          size="icon"
                           onClick={() => abrirConfirmacaoExclusao(p.id)}
-                          className="h-8 w-8 p-0"
+                          className="hover:bg-gray-100 dark:hover:bg-gray-700 text-red-600 h-8 w-8 p-0"
                           disabled={isDeleting !== null}
                         >
                           {isDeleting === p.id ? (
@@ -377,18 +406,17 @@ export default function MedicamentosPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="text-center text-muted-foreground py-6"
-                  >
-                    Nenhum medicamento encontrado
+                  <TableCell colSpan={6} className="h-24 text-center">
+                    {searchTerm
+                      ? "Nenhum medicamento encontrado"
+                      : "Nenhum medicamento cadastrado"}
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
         </div>
-      </Card>
+      )}
 
       {/* Modal de Confirmação */}
       <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
