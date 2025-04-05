@@ -1,232 +1,396 @@
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { Plus, Search, ArrowRight } from "lucide-react"
+"use client";
+
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, Search, ArrowRight, Loader2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+interface Doenca {
+  id: string;
+  nome: string | null;
+  descricao: string | null;
+  gravidade?: "baixa" | "media" | "alta";
+  categoria?: string;
+}
 
 export default function DoencasPage() {
-  // Exemplo de dados de doenças
-  const doencas = [
-    {
-      id: 1,
-      nome: "Hipertensão",
-      descricao: "Pressão arterial elevada que pode levar a problemas cardíacos.",
-      sintomas: ["Dores de cabeça", "Tontura", "Visão embaçada", "Falta de ar"],
-      tratamentos: ["Inibidores da ECA", "Bloqueadores de canais de cálcio", "Diuréticos"],
-      gravidade: "Moderada",
-    },
-    {
-      id: 2,
-      nome: "Diabetes Tipo 2",
-      descricao: "Condição crônica que afeta a forma como o corpo processa o açúcar no sangue.",
-      sintomas: ["Sede excessiva", "Micção frequente", "Fadiga", "Visão embaçada"],
-      tratamentos: ["Metformina", "Insulina", "Inibidores de SGLT2"],
-      gravidade: "Moderada",
-    },
-    {
-      id: 3,
-      nome: "Asma",
-      descricao: "Condição que causa inflamação e estreitamento das vias aéreas.",
-      sintomas: ["Falta de ar", "Chiado no peito", "Tosse", "Aperto no peito"],
-      tratamentos: ["Broncodilatadores", "Corticosteroides inalatórios", "Modificadores de leucotrienos"],
-      gravidade: "Moderada",
-    },
-    {
-      id: 4,
-      nome: "Enxaqueca",
-      descricao: "Dor de cabeça intensa que pode ser acompanhada por náusea e sensibilidade à luz.",
-      sintomas: ["Dor pulsante", "Náusea", "Sensibilidade à luz", "Visão embaçada"],
-      tratamentos: ["Triptanos", "Analgésicos", "Antieméticos"],
-      gravidade: "Leve",
-    },
-    {
-      id: 5,
-      nome: "Artrite Reumatoide",
-      descricao: "Doença autoimune que causa inflamação nas articulações.",
-      sintomas: ["Dor nas articulações", "Rigidez", "Inchaço", "Fadiga"],
-      tratamentos: ["Anti-inflamatórios", "Medicamentos antirreumáticos", "Corticosteroides"],
-      gravidade: "Grave",
-    },
-    {
-      id: 6,
-      nome: "Doença de Alzheimer",
-      descricao: "Doença neurodegenerativa progressiva que causa problemas de memória e cognição.",
-      sintomas: ["Perda de memória", "Confusão", "Mudanças de humor", "Dificuldade para resolver problemas"],
-      tratamentos: ["Inibidores de colinesterase", "Memantina"],
-      gravidade: "Grave",
-    },
-  ]
+  const [doencas, setDoencas] = useState<Doenca[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [openModal, setOpenModal] = useState(false);
+  const [filtroCategoria, setFiltroCategoria] = useState<string | null>(null);
+  const [modalExclusaoAberto, setModalExclusaoAberto] = useState(false);
+  const [doencaParaExcluir, setDoencaParaExcluir] = useState<Doenca | null>(
+    null
+  );
+  const [excluindo, setExcluindo] = useState(false);
+
+  // Form states
+  const [novaDoenca, setNovaDoenca] = useState<{
+    nome: string;
+    descricao: string;
+    gravidade: "baixa" | "media" | "alta";
+    categoria: string;
+  }>({
+    nome: "",
+    descricao: "",
+    gravidade: "baixa",
+    categoria: "geral",
+  });
+
+  useEffect(() => {
+    setIsLoading(true);
+    fetch("/api/doenca")
+      .then((res) => res.json())
+      .then((data) => {
+        setDoencas(data);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.error("Erro ao buscar doenças:", err);
+        setIsLoading(false);
+      });
+  }, []);
+
+  const handleAddDoenca = async () => {
+    setIsLoading(true);
+
+    try {
+      const res = await fetch("/api/doenca", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(novaDoenca),
+      });
+
+      if (!res.ok) throw new Error("Erro ao salvar no servidor.");
+
+      const nova = await res.json();
+
+      setDoencas([...doencas, nova]); // atualiza lista com a nova do backend
+      setOpenModal(false);
+    } catch (err) {
+      console.error("Erro ao salvar doença:", err);
+      alert("Erro ao salvar doença.");
+    } finally {
+      setIsLoading(false);
+
+      // Reset form
+      setNovaDoenca({
+        nome: "",
+        descricao: "",
+        gravidade: "baixa",
+        categoria: "geral",
+      });
+    }
+  };
+
+  const handleDeleteDoenca = async (id: string) => {
+    if (!confirm("Tem certeza que deseja excluir esta doença?")) return;
+
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/doenca", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id }),
+      });
+
+      if (!res.ok) throw new Error("Erro ao excluir no servidor.");
+
+      setDoencas(doencas.filter((d) => d.id !== id));
+    } catch (err) {
+      console.error("Erro ao excluir doença:", err);
+      alert("Erro ao excluir doença.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const confirmarExclusaoDoenca = async () => {
+    if (!doencaParaExcluir) return;
+
+    setExcluindo(true);
+
+    try {
+      const res = await fetch("/api/doenca", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: doencaParaExcluir.id }),
+      });
+
+      if (!res.ok) throw new Error("Erro ao excluir no servidor.");
+
+      setDoencas(doencas.filter((d) => d.id !== doencaParaExcluir.id));
+      setModalExclusaoAberto(false);
+      setDoencaParaExcluir(null);
+    } catch (err) {
+      console.error("Erro ao excluir doença:", err);
+      alert("Erro ao excluir doença.");
+    } finally {
+      setExcluindo(false);
+    }
+  };
+
+  const doencasFiltradas = doencas.filter((doenca) => {
+    const matchSearch =
+      doenca.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doenca.descricao?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchCategoria = filtroCategoria
+      ? doenca.categoria === filtroCategoria
+      : true;
+
+    return matchSearch && matchCategoria;
+  });
+
+  const renderGravidadeBadge = (gravidade?: string) => {
+    if (!gravidade) return null;
+
+    const styles = {
+      baixa: "bg-green-100 text-green-800 hover:bg-green-100",
+      media: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
+      alta: "bg-red-100 text-red-800 hover:bg-red-100",
+    };
+
+    return (
+      <Badge
+        className={
+          gravidade in styles ? styles[gravidade as keyof typeof styles] : ""
+        }
+      >
+        {gravidade.charAt(0).toUpperCase() + gravidade.slice(1)}
+      </Badge>
+    );
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Doenças</h1>
-          <p className="text-muted-foreground">Informações sobre doenças e tratamentos recomendados</p>
+          <p className="text-muted-foreground">
+            Informações sobre doenças cadastradas
+          </p>
         </div>
-        <Button className="gap-2">
-          <Plus className="h-4 w-4" />
-          Nova Doença
-        </Button>
+        <Dialog open={openModal} onOpenChange={setOpenModal}>
+          <DialogTrigger asChild>
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Nova Doença
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Adicionar Nova Doença</DialogTitle>
+              <DialogDescription>
+                Preencha os detalhes da doença e clique em salvar quando
+                finalizar.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="nome" className="text-right">
+                  Nome
+                </Label>
+                <Input
+                  id="nome"
+                  value={novaDoenca.nome}
+                  onChange={(e) =>
+                    setNovaDoenca({ ...novaDoenca, nome: e.target.value })
+                  }
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="descricao" className="text-right">
+                  Descrição
+                </Label>
+                <Textarea
+                  id="descricao"
+                  value={novaDoenca.descricao}
+                  onChange={(e) =>
+                    setNovaDoenca({ ...novaDoenca, descricao: e.target.value })
+                  }
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="gravidade" className="text-right">
+                  Gravidade
+                </Label>
+                <Select
+                  value={novaDoenca.gravidade}
+                  onValueChange={(value) =>
+                    setNovaDoenca({
+                      ...novaDoenca,
+                      gravidade: value as "baixa" | "media" | "alta",
+                    })
+                  }
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="baixa">Baixa</SelectItem>
+                    <SelectItem value="media">Média</SelectItem>
+                    <SelectItem value="alta">Alta</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Select
+                  value={novaDoenca.categoria}
+                  onValueChange={(value) =>
+                    setNovaDoenca({ ...novaDoenca, categoria: value })
+                  }
+                ></Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={handleAddDoenca} disabled={isLoading}>
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Salvar"
+                )}
+              </Button>{" "}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      <div className="flex w-full max-w-sm items-center space-x-2">
-        <div className="relative w-full">
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+        <div className="relative w-full max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input type="search" placeholder="Buscar doenças..." className="w-full pl-8" />
+          <Input
+            type="search"
+            placeholder="Buscar doenças..."
+            className="w-full pl-8"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
+
+        <Select
+          value={filtroCategoria || ""}
+          onValueChange={(value) => setFiltroCategoria(value || null)}
+        ></Select>
       </div>
 
-      <Tabs defaultValue="todas" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="todas">Todas</TabsTrigger>
-          <TabsTrigger value="leves">Leves</TabsTrigger>
-          <TabsTrigger value="moderadas">Moderadas</TabsTrigger>
-          <TabsTrigger value="graves">Graves</TabsTrigger>
-        </TabsList>
-        <TabsContent value="todas" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {doencas.map((doenca) => (
-              <Card key={doenca.id}>
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
-                    <CardTitle>{doenca.nome}</CardTitle>
-                    <Badge
-                      variant={
-                        doenca.gravidade === "Leve"
-                          ? "outline"
-                          : doenca.gravidade === "Moderada"
-                            ? "secondary"
-                            : "destructive"
-                      }
-                    >
-                      {doenca.gravidade}
-                    </Badge>
-                  </div>
-                  <CardDescription>{doenca.descricao}</CardDescription>
-                </CardHeader>
-                <CardContent className="pb-2">
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium">Sintomas comuns:</h4>
-                    <ul className="text-sm text-muted-foreground pl-5 list-disc">
-                      {doenca.sintomas.map((sintoma, index) => (
-                        <li key={index}>{sintoma}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button variant="outline" className="w-full gap-1">
-                    Ver detalhes
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-        <TabsContent value="leves" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {doencas
-              .filter((doenca) => doenca.gravidade === "Leve")
-              .map((doenca) => (
-                <Card key={doenca.id}>
-                  <CardHeader className="pb-2">
-                    <div className="flex items-start justify-between">
-                      <CardTitle>{doenca.nome}</CardTitle>
-                      <Badge variant="outline">{doenca.gravidade}</Badge>
-                    </div>
-                    <CardDescription>{doenca.descricao}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="pb-2">
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium">Sintomas comuns:</h4>
-                      <ul className="text-sm text-muted-foreground pl-5 list-disc">
-                        {doenca.sintomas.map((sintoma, index) => (
-                          <li key={index}>{sintoma}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button variant="outline" className="w-full gap-1">
-                      Ver detalhes
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-          </div>
-        </TabsContent>
-        <TabsContent value="moderadas" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {doencas
-              .filter((doenca) => doenca.gravidade === "Moderada")
-              .map((doenca) => (
-                <Card key={doenca.id}>
-                  <CardHeader className="pb-2">
-                    <div className="flex items-start justify-between">
-                      <CardTitle>{doenca.nome}</CardTitle>
-                      <Badge variant="secondary">{doenca.gravidade}</Badge>
-                    </div>
-                    <CardDescription>{doenca.descricao}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="pb-2">
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium">Sintomas comuns:</h4>
-                      <ul className="text-sm text-muted-foreground pl-5 list-disc">
-                        {doenca.sintomas.map((sintoma, index) => (
-                          <li key={index}>{sintoma}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button variant="outline" className="w-full gap-1">
-                      Ver detalhes
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-          </div>
-        </TabsContent>
-        <TabsContent value="graves" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {doencas
-              .filter((doenca) => doenca.gravidade === "Grave")
-              .map((doenca) => (
-                <Card key={doenca.id}>
-                  <CardHeader className="pb-2">
-                    <div className="flex items-start justify-between">
-                      <CardTitle>{doenca.nome}</CardTitle>
-                      <Badge variant="destructive">{doenca.gravidade}</Badge>
-                    </div>
-                    <CardDescription>{doenca.descricao}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="pb-2">
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium">Sintomas comuns:</h4>
-                      <ul className="text-sm text-muted-foreground pl-5 list-disc">
-                        {doenca.sintomas.map((sintoma, index) => (
-                          <li key={index}>{sintoma}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button variant="outline" className="w-full gap-1">
-                      Ver detalhes
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-          </div>
-        </TabsContent>
-      </Tabs>
-    </div>
-  )
-}
+      {isLoading ? (
+        <div className="flex justify-center items-center h-40">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : doencasFiltradas.length === 0 ? (
+        <div className="text-center p-10 border rounded-lg bg-muted/50">
+          <p className="text-muted-foreground">Nenhuma doença encontrada.</p>
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {doencasFiltradas.map((doenca) => (
+            <Card key={doenca.id} className="overflow-hidden">
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-start">
+                  <CardTitle className="flex-1">
+                    {doenca.nome ?? "Sem nome"}
+                  </CardTitle>
+                  {renderGravidadeBadge(doenca.gravidade)}
+                </div>
+                {doenca.categoria && (
+                  <Badge variant="outline" className="mb-2">
+                    {doenca.categoria.charAt(0).toUpperCase() +
+                      doenca.categoria.slice(1)}
+                  </Badge>
+                )}
+                <CardDescription>
+                  {doenca.descricao ?? "Sem descrição"}
+                </CardDescription>
+              </CardHeader>
+              <CardFooter className="flex gap-2">
+                <Button
+                  variant="destructive"
+                  className="w-auto px-3"
+                  onClick={() => {
+                    setDoencaParaExcluir(doenca);
+                    setModalExclusaoAberto(true);
+                  }}
+                >
+                  Excluir
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      )}
+      <Dialog open={modalExclusaoAberto} onOpenChange={setModalExclusaoAberto}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar Exclusão</DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja excluir a doença{" "}
+              <strong>{doencaParaExcluir?.nome}</strong>?
+            </DialogDescription>
+          </DialogHeader>
 
+          <DialogFooter className="mt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setModalExclusaoAberto(false);
+                setDoencaParaExcluir(null);
+              }}
+              disabled={excluindo}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmarExclusaoDoenca}
+              disabled={excluindo}
+            >
+              {excluindo ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Excluir"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

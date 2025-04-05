@@ -38,6 +38,8 @@ model doenca {
   nome           String?          @db.VarChar(255)
   updated_at     DateTime?        @db.Timestamp(6)
   doenca_cliente doenca_cliente[]
+  gravidade      String?          @default("baixa")
+  categoria      String?          @default("geral")
 }
 
 model doenca_cliente {
