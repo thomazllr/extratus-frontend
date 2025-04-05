@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+import { Plus, Search, Filter, Download, Trash2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -8,6 +12,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -15,230 +30,457 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Search, MoreHorizontal, Filter } from "lucide-react";
+import { toast } from "sonner";
 
 export default function MedicamentosPage() {
-  // Exemplo de dados de medicamentos
-  const medicamentos = [
+  const [produtos, setProdutos] = useState<
     {
-      id: 1,
-      nome: "Dipirona 500mg",
-      categoria: "Analgésico",
-      fabricante: "Medley",
-      estoque: 120,
-      status: "Em estoque",
-      preco: 5.99,
-      validade: "12/2025",
-    },
-    {
-      id: 2,
-      nome: "Amoxicilina 250mg",
-      categoria: "Antibiótico",
-      fabricante: "EMS",
-      estoque: 45,
-      status: "Em estoque",
-      preco: 25.5,
-      validade: "06/2025",
-    },
-    {
-      id: 3,
-      nome: "Ibuprofeno 400mg",
-      categoria: "Anti-inflamatório",
-      fabricante: "Neo Química",
-      estoque: 10,
-      status: "Estoque baixo",
-      preco: 12.75,
-      validade: "03/2025",
-    },
-    {
-      id: 4,
-      nome: "Loratadina 10mg",
-      categoria: "Antialérgico",
-      fabricante: "Cimed",
-      estoque: 78,
-      status: "Em estoque",
-      preco: 15.2,
-      validade: "09/2025",
-    },
-    {
-      id: 5,
-      nome: "Omeprazol 20mg",
-      categoria: "Antiácido",
-      fabricante: "Medley",
-      estoque: 0,
-      status: "Sem estoque",
-      preco: 18.9,
-      validade: "05/2025",
-    },
-    {
-      id: 6,
-      nome: "Paracetamol 750mg",
-      categoria: "Analgésico",
-      fabricante: "EMS",
-      estoque: 95,
-      status: "Em estoque",
-      preco: 8.5,
-      validade: "10/2025",
-    },
-    {
-      id: 7,
-      nome: "Azitromicina 500mg",
-      categoria: "Antibiótico",
-      fabricante: "Neo Química",
-      estoque: 5,
-      status: "Estoque baixo",
-      preco: 32.8,
-      validade: "04/2025",
-    },
-  ];
+      id: number;
+      nome: string;
+      descricao: string;
+      preco: number;
+      categoria: string;
+      estoque: { quantidade: number }[];
+    }[]
+  >([]);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [produtoSelecionado, setProdutoSelecionado] = useState<number | null>(
+    null
+  );
+  const [isDeleting, setIsDeleting] = useState<number | null>(null);
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+  const [produtoDetalhado, setProdutoDetalhado] = useState<
+    null | (typeof produtos)[0]
+  >(null);
+
+  const [form, setForm] = useState({
+    nome: "",
+    descricao: "",
+    preco: "",
+    quantidade: "",
+    categoria: "analgésico",
+  });
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleSelectChange = (value: string) => {
+    setForm((prev) => ({ ...prev, categoria: value }));
+  };
+
+  const resetForm = () => {
+    setForm({
+      nome: "",
+      descricao: "",
+      preco: "",
+      quantidade: "",
+      categoria: "analgésico",
+    });
+  };
+
+  const handleSubmit = async () => {
+    if (!form.nome || !form.descricao || !form.preco || !form.quantidade) {
+      toast.error("Preencha todos os campos obrigatórios");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await new Promise((r) => setTimeout(r, 1000));
+
+      const novoProduto = {
+        id: Date.now(),
+        nome: form.nome,
+        descricao: form.descricao,
+        preco: parseFloat(form.preco),
+        categoria: form.categoria,
+        estoque: [{ quantidade: parseInt(form.quantidade) }],
+      };
+
+      setProdutos((prev) => [...prev, novoProduto]);
+      toast.success("Medicamento cadastrado com sucesso!");
+      resetForm();
+      setIsDialogOpen(false);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const abrirConfirmacaoExclusao = (id: number) => {
+    setProdutoSelecionado(id);
+    setIsConfirmDialogOpen(true);
+  };
+
+  const confirmarExclusao = async () => {
+    if (produtoSelecionado !== null) {
+      setIsDeleting(produtoSelecionado);
+      await new Promise((r) => setTimeout(r, 1000));
+
+      setProdutos((prev) => prev.filter((p) => p.id !== produtoSelecionado));
+      toast.success("Medicamento excluído.");
+      setProdutoSelecionado(null);
+      setIsConfirmDialogOpen(false);
+      setIsDeleting(null);
+    }
+  };
+
+  const abrirDetalhesProduto = (produto: (typeof produtos)[0]) => {
+    setProdutoDetalhado(produto);
+    setIsDetailDialogOpen(true);
+  };
+
+  const filteredProducts = produtos.filter(
+    (p) =>
+      p.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.descricao.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const getCategoryColor = (categoria: string) => {
+    switch (categoria) {
+      case "analgésico":
+        return "bg-blue-100 text-blue-800";
+      case "antibiótico":
+        return "bg-purple-100 text-purple-800";
+      case "anti-inflamatório":
+        return "bg-orange-100 text-orange-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Medicamentos</h1>
-          <p className="text-muted-foreground">
-            Gerencie o catálogo de medicamentos
+          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+            Medicamentos
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Gerencie o catálogo de medicamentos da farmácia
           </p>
         </div>
-        <Button className="gap-2">
-          <Plus className="h-4 w-4" />
-          Novo Medicamento
-        </Button>
-      </div>
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex w-full max-w-sm items-center gap-2">
-          <div className="relative w-full">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Buscar medicamentos..."
-              className="w-full pl-8"
-            />
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon">
-                <Filter className="h-4 w-4" />
-                <span className="sr-only">Filtrar</span>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Button
+            onClick={() => setIsDialogOpen(true)}
+            className="gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:brightness-110 hover:scale-105 transition"
+          >
+            <Plus className="h-4 w-4" />
+            Novo Medicamento
+          </Button>
+
+          <DialogContent className="sm:max-w-[500px] rounded-lg">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+                Cadastrar Novo Medicamento
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="nome">Nome</Label>
+                  <Input
+                    id="nome"
+                    name="nome"
+                    value={form.nome}
+                    onChange={handleChange}
+                    placeholder="Ex: Paracetamol"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="categoria">Categoria</Label>
+                  <Select
+                    value={form.categoria}
+                    onValueChange={handleSelectChange}
+                  >
+                    <SelectTrigger id="categoria">
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="analgésico">Analgésico</SelectItem>
+                      <SelectItem value="antibiótico">Antibiótico</SelectItem>
+                      <SelectItem value="anti-inflamatório">
+                        Anti-inflamatório
+                      </SelectItem>
+                      <SelectItem value="outros">Outros</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="descricao">Descrição</Label>
+                <Textarea
+                  id="descricao"
+                  name="descricao"
+                  value={form.descricao}
+                  onChange={handleChange}
+                  placeholder="Descreva o medicamento"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="preco">Preço (R$)</Label>
+                  <Input
+                    id="preco"
+                    name="preco"
+                    type="number"
+                    value={form.preco}
+                    onChange={handleChange}
+                    placeholder="0.00"
+                    step="0.01"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="quantidade">Estoque</Label>
+                  <Input
+                    id="quantidade"
+                    name="quantidade"
+                    type="number"
+                    value={form.quantidade}
+                    onChange={handleChange}
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Cancelar
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[200px]">
-              <DropdownMenuLabel>Filtrar por</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Categoria</DropdownMenuItem>
-              <DropdownMenuItem>Fabricante</DropdownMenuItem>
-              <DropdownMenuItem>Status de estoque</DropdownMenuItem>
-              <DropdownMenuItem>Validade</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        <div className="flex items-center gap-2">
-          <Select defaultValue="todos">
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos os status</SelectItem>
-              <SelectItem value="em-estoque">Em estoque</SelectItem>
-              <SelectItem value="estoque-baixo">Estoque baixo</SelectItem>
-              <SelectItem value="sem-estoque">Sem estoque</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select defaultValue="todos">
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Categoria" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todas as categorias</SelectItem>
-              <SelectItem value="analgesico">Analgésico</SelectItem>
-              <SelectItem value="antibiotico">Antibiótico</SelectItem>
-              <SelectItem value="anti-inflamatorio">
-                Anti-inflamatório
-              </SelectItem>
-              <SelectItem value="antialergico">Antialérgico</SelectItem>
-              <SelectItem value="antiacido">Antiácido</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+              <Button
+                onClick={handleSubmit}
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:brightness-110"
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <div className="flex items-center gap-2">
+                    <div className="h-4 w-4 border-2 border-white border-t-transparent animate-spin rounded-full" />
+                    Salvando...
+                  </div>
+                ) : (
+                  "Cadastrar"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Categoria</TableHead>
-              <TableHead>Fabricante</TableHead>
-              <TableHead>Estoque</TableHead>
-              <TableHead>Preço</TableHead>
-              <TableHead>Validade</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {medicamentos.map((medicamento) => (
-              <TableRow key={medicamento.id}>
-                <TableCell className="font-medium">
-                  {medicamento.nome}
-                </TableCell>
-                <TableCell>{medicamento.categoria}</TableCell>
-                <TableCell>{medicamento.fabricante}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    {medicamento.estoque}
-                    <Badge
-                      variant={
-                        medicamento.status === "Em estoque"
-                          ? "default"
-                          : medicamento.status === "Estoque baixo"
-                          ? "outline"
-                          : "destructive"
-                      }
-                      className="ml-2"
-                    >
-                      {medicamento.status}
-                    </Badge>
-                  </div>
-                </TableCell>
-                <TableCell>R$ {medicamento.preco.toFixed(2)}</TableCell>
-                <TableCell>{medicamento.validade}</TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Abrir menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem>Editar</DropdownMenuItem>
-                      <DropdownMenuItem>Visualizar detalhes</DropdownMenuItem>
-                      <DropdownMenuItem>Atualizar estoque</DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-red-600">
-                        Excluir
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
+      {/* Search and Actions */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <Input
+                placeholder="Buscar por nome ou descrição..."
+                className="pl-9"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" className="gap-2">
+                <Filter className="h-4 w-4" />
+                <span className="hidden sm:inline">Filtrar</span>
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Tabela */}
+      <Card>
+        <div className="overflow-auto">
+          <Table className="min-w-[700px] text-sm">
+            <TableHeader>
+              <TableRow className="bg-gradient-to-r from-indigo-100 to-blue-100 text-indigo-900">
+                <TableHead>Nome</TableHead>
+                <TableHead>Descrição</TableHead>
+                <TableHead>Categoria</TableHead>
+                <TableHead>Estoque</TableHead>
+                <TableHead className="text-right">Preço</TableHead>
+                <TableHead className="text-center">Ações</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+            </TableHeader>
+            <TableBody>
+              {filteredProducts.length > 0 ? (
+                filteredProducts.map((p) => (
+                  <TableRow
+                    key={p.id}
+                    className="hover:bg-blue-50/50 transition"
+                  >
+                    <TableCell>💊 {p.nome}</TableCell>
+                    <TableCell className="line-clamp-1">
+                      {p.descricao}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        className={`text-xs ${getCategoryColor(p.categoria)}`}
+                      >
+                        {p.categoria}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          p.estoque[0]?.quantidade === 0
+                            ? "destructive"
+                            : p.estoque[0]?.quantidade < 10
+                            ? "outline"
+                            : "secondary"
+                        }
+                        className="text-xs"
+                      >
+                        {p.estoque[0]?.quantidade ?? 0} unid.
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right text-blue-700 font-medium">
+                      💰 R$ {p.preco.toFixed(2).replace(".", ",")}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex justify-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => abrirDetalhesProduto(p)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => abrirConfirmacaoExclusao(p.id)}
+                          className="h-8 w-8 p-0"
+                          disabled={isDeleting !== null}
+                        >
+                          {isDeleting === p.id ? (
+                            <div className="h-4 w-4 border-2 border-blue-500 border-t-transparent animate-spin rounded-full" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={6}
+                    className="text-center text-muted-foreground py-6"
+                  >
+                    Nenhum medicamento encontrado
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </Card>
+
+      {/* Modal de Confirmação */}
+      <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="text-red-600 text-lg">
+              Confirmar exclusão
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Você tem certeza que deseja excluir este medicamento? Esta ação não
+            poderá ser desfeita.
+          </p>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsConfirmDialogOpen(false)}
+              disabled={isDeleting !== null}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmarExclusao}
+              disabled={isDeleting !== null}
+            >
+              {isDeleting !== null ? "Excluindo..." : "Excluir"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Detalhes */}
+      <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+              Detalhes do Medicamento
+            </DialogTitle>
+          </DialogHeader>
+          {produtoDetalhado && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label>Nome</Label>
+                  <p>{produtoDetalhado.nome}</p>
+                </div>
+                <div className="space-y-1">
+                  <Label>Categoria</Label>
+                  <Badge
+                    className={`text-xs ${getCategoryColor(
+                      produtoDetalhado.categoria
+                    )}`}
+                  >
+                    {produtoDetalhado.categoria}
+                  </Badge>
+                </div>
+              </div>
+              <div>
+                <Label>Descrição</Label>
+                <p>{produtoDetalhado.descricao}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Preço</Label>
+                  <p className="text-blue-700 font-semibold">
+                    R$ {produtoDetalhado.preco.toFixed(2).replace(".", ",")}
+                  </p>
+                </div>
+                <div>
+                  <Label>Estoque</Label>
+                  <Badge
+                    variant={
+                      produtoDetalhado.estoque[0]?.quantidade === 0
+                        ? "destructive"
+                        : produtoDetalhado.estoque[0]?.quantidade < 10
+                        ? "outline"
+                        : "secondary"
+                    }
+                    className="text-xs"
+                  >
+                    {produtoDetalhado.estoque[0]?.quantidade ?? 0} unid.
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setIsDetailDialogOpen(false)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

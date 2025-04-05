@@ -91,6 +91,7 @@ model produto {
   nome       String?      @db.VarChar(255)
   preco      Decimal?     @db.Decimal(38, 2)
   updated_at DateTime?    @db.Timestamp(6)
+  categoria  String?      @db.VarChar(255)
   estoque    estoque[]
   item_venda item_venda[]
 }
