@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "venda" ALTER COLUMN "data" SET DATA TYPE TIMESTAMP(6);

@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Check } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -28,6 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 export default function EstoquePage() {
   // Estado para controle da tabela
@@ -74,6 +75,7 @@ export default function EstoquePage() {
       setMovimentacoes(movimentacoesFormatadas);
     } catch (error) {
       console.error("Erro ao carregar movimentações:", error);
+      toast.error("Erro ao carregar movimentações");
     } finally {
       setLoadingTable(false);
     }
@@ -97,6 +99,7 @@ export default function EstoquePage() {
         setTiposPagamento(tiposPagamentoRes);
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
+        toast.error("Erro ao carregar dados iniciais");
       } finally {
         setLoadingDialog(false);
       }
@@ -153,11 +156,11 @@ export default function EstoquePage() {
 
   const handleRegistrar = async () => {
     if (!clienteId || !tipoPagamentoId) {
-      return alert("Preencha todos os campos obrigatórios");
+      return toast.error("Preencha todos os campos obrigatórios");
     }
 
     if (itens.some((item) => item.produto_id === 0)) {
-      return alert("Selecione todos os produtos");
+      return toast.error("Selecione todos os produtos");
     }
 
     try {
@@ -188,28 +191,86 @@ export default function EstoquePage() {
       const data = await res.json();
 
       if (res.ok) {
-        alert("Movimentação registrada com sucesso!");
+        toast.success("Movimentação registrada com sucesso!");
         setOpenDialog(false);
         resetForm();
         carregarMovimentacoes();
       } else {
-        alert(`Erro: ${data.mensagem || "Erro ao registrar movimentação."}`);
+        toast.error(data.mensagem || "Erro ao registrar movimentação.");
       }
     } catch (error) {
       console.error("Erro na requisição:", error);
-      alert("Erro ao processar a requisição.");
+      toast.error("Erro ao processar a requisição.");
     } finally {
       setLoadingDialog(false);
     }
   };
 
+  // Função para atualizar status de pagamento
+  const atualizarStatusPagamento = async (id: number, novoStatus: string) => {
+    try {
+      const res = await fetch(`/api/estoque/${id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status_pagamento: novoStatus }),
+      });
+
+      if (res.ok) {
+        toast.success("Status atualizado com sucesso!");
+        carregarMovimentacoes();
+      } else {
+        const data = await res.json();
+        toast.error(data.mensagem || "Erro ao atualizar status.");
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar status:", error);
+      toast.error("Erro ao atualizar status.");
+    }
+  };
+
+  // Função para excluir movimentação
+  const excluirMovimentacao = async (id: number) => {
+    if (!confirm("Tem certeza que deseja excluir esta movimentação?")) return;
+
+    try {
+      const res = await fetch(`/api/estoque/${id}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        toast.success("Movimentação excluída com sucesso!");
+        carregarMovimentacoes();
+      } else {
+        const data = await res.json();
+        toast.error(data.mensagem || "Erro ao excluir movimentação.");
+      }
+    } catch (error) {
+      console.error("Erro ao excluir movimentação:", error);
+      toast.error("Erro ao excluir movimentação.");
+    }
+  };
+
   // Funções para formatação
-  const formatarData = (dataString: string) => {
-    return new Date(dataString).toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
+  const formatarDataHora = (dataString: string) => {
+    try {
+      const data = new Date(dataString);
+      if (isNaN(data.getTime())) {
+        return dataString;
+      }
+
+      // Formata considerando o fuso horário local sem modificar a hora absoluta
+      return new Intl.DateTimeFormat("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      }).format(data);
+    } catch {
+      return dataString;
+    }
   };
 
   const formatarMoeda = (valor: number) => {
@@ -218,6 +279,17 @@ export default function EstoquePage() {
       currency: "BRL",
     });
   };
+
+  useEffect(() => {
+    console.log(
+      "Dados das movimentações:",
+      movimentacoes.map((mov) => ({
+        id: mov.id,
+        dataOriginal: mov.data,
+        dataFormatada: formatarDataHora(mov.data),
+      }))
+    );
+  }, [movimentacoes]);
 
   return (
     <div className="p-6 space-y-4">
@@ -414,18 +486,19 @@ export default function EstoquePage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Data</TableHead>
+                <TableHead>Data/Hora</TableHead>
                 <TableHead>Cliente</TableHead>
                 <TableHead>Produtos</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Total</TableHead>
                 <TableHead>Pagamento</TableHead>
+                <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {movimentacoes.map((mov) => (
                 <TableRow key={mov.id}>
-                  <TableCell>{formatarData(mov.data)}</TableCell>
+                  <TableCell>{formatarDataHora(mov.data)}</TableCell>
                   <TableCell>{mov.cliente?.nome || "Não informado"}</TableCell>
                   <TableCell>
                     {mov.item_venda?.map((item: any) => (
@@ -436,26 +509,64 @@ export default function EstoquePage() {
                     ))}
                   </TableCell>
                   <TableCell>
-                    <Badge
-                      variant={
-                        mov.status_pagamento === "pago"
-                          ? "default"
-                          : "secondary"
-                      }
-                      className={
-                        mov.status_pagamento === "pago"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-yellow-100 text-yellow-800"
-                      }
-                    >
-                      {mov.status_pagamento}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant={
+                          mov.status_pagamento === "pago"
+                            ? "default"
+                            : "secondary"
+                        }
+                        className={
+                          mov.status_pagamento === "pago"
+                            ? "bg-green-100 text-green-800 hover:bg-green-200"
+                            : "bg-yellow-100 text-yellow-800 hover:bg-yellow-200"
+                        }
+                      >
+                        {mov.status_pagamento}
+                      </Badge>
+                      {mov.status_pagamento === "pendente" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 gap-1 text-green-600 border-green-300 hover:bg-green-50"
+                          onClick={() =>
+                            atualizarStatusPagamento(mov.id, "pago")
+                          }
+                        >
+                          <Check className="h-3 w-3" />
+                          <span>Marcar como pago</span>
+                        </Button>
+                      )}
+                      {mov.status_pagamento === "pago" && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 text-muted-foreground"
+                          disabled
+                          title="Pagamento já realizado"
+                        >
+                          <Check className="h-3 w-3 mr-1" />
+                          Confirmado
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    R$ {formatarMoeda(mov.total)}
+                    {formatarMoeda(mov.total)}
                   </TableCell>
                   <TableCell>
                     {mov.pagamento?.tipo_pagamento?.nome || "Não informado"}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 hover:bg-red-50"
+                      onClick={() => excluirMovimentacao(mov.id)}
+                      title="Excluir movimentação"
+                    >
+                      <Trash2 className="h-4 w-4 text-red-600" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}

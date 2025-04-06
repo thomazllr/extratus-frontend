@@ -42,3 +42,40 @@ export async function DELETE(
     );
   }
 }
+
+export async function PATCH(
+  req: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: paramId } = await context.params; // ✅ corrigido
+    const { quantidade } = await req.json();
+    const id = parseInt(paramId);
+
+    // Atualiza o estoque do produto
+    const estoqueAtualizado = await prisma.estoque.updateMany({
+      where: {
+        produto_id: id,
+      },
+      data: {
+        quantidade,
+        updated_at: new Date(),
+      },
+    });
+
+    if (!estoqueAtualizado) {
+      return NextResponse.json(
+        { error: "Estoque não encontrado" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Erro ao atualizar estoque:", error);
+    return NextResponse.json(
+      { error: "Erro interno do servidor" },
+      { status: 500 }
+    );
+  }
+}

@@ -49,6 +49,7 @@ export default function MedicamentosPage() {
   const [produtoDetalhado, setProdutoDetalhado] = useState<
     null | (typeof produtos)[0]
   >(null);
+  const [editandoEstoque, setEditandoEstoque] = useState<number | null>(null);
 
   const [form, setForm] = useState({
     nome: "",
@@ -77,6 +78,7 @@ export default function MedicamentosPage() {
       categoria: "analgésico",
     });
   };
+
   const handleSubmit = async () => {
     if (!form.nome || !form.descricao || !form.preco || !form.quantidade) {
       toast.error("Preencha todos os campos obrigatórios");
@@ -106,7 +108,7 @@ export default function MedicamentosPage() {
       toast.success("Medicamento cadastrado com sucesso!");
       resetForm();
       setIsDialogOpen(false);
-      await fetchProdutos(); // 👈 atualiza lista com dados do banco
+      await fetchProdutos();
     } catch (err) {
       toast.error("Erro ao salvar medicamento");
       console.error(err);
@@ -134,7 +136,7 @@ export default function MedicamentosPage() {
         }
 
         toast.success("Medicamento excluído com sucesso.");
-        await fetchProdutos(); // 👈 Atualiza lista com dados reais do banco
+        await fetchProdutos();
       } catch (err) {
         toast.error("Erro ao excluir o medicamento.");
         console.error(err);
@@ -145,9 +147,34 @@ export default function MedicamentosPage() {
       }
     }
   };
+
   const abrirDetalhesProduto = (produto: (typeof produtos)[0]) => {
     setProdutoDetalhado(produto);
     setIsDetailDialogOpen(true);
+  };
+
+  const atualizarEstoque = async (id: number, quantidade: number) => {
+    try {
+      const response = await fetch(`/api/produtos/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ quantidade }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro ao atualizar estoque");
+      }
+
+      toast.success("Estoque atualizado com sucesso!");
+      await fetchProdutos();
+    } catch (err) {
+      toast.error("Erro ao atualizar estoque");
+      console.error(err);
+    } finally {
+      setEditandoEstoque(null);
+    }
   };
 
   const filteredProducts = produtos.filter(
@@ -360,17 +387,47 @@ export default function MedicamentosPage() {
                     </TableCell>
 
                     <TableCell>
-                      <Badge
-                        variant={
-                          p.estoque[0]?.quantidade === 0
-                            ? "destructive"
-                            : p.estoque[0]?.quantidade < 10
-                            ? "outline"
-                            : "secondary"
-                        }
-                      >
-                        {p.estoque[0]?.quantidade ?? 0} unid.
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-6 w-6 p-0 transition-transform active:scale-90 hover:bg-blue-50"
+                          onClick={() => {
+                            const novaQuantidade =
+                              (p.estoque[0]?.quantidade ?? 0) + 1;
+                            atualizarEstoque(p.id, novaQuantidade);
+                          }}
+                        >
+                          +
+                        </Button>
+                        <Badge
+                          variant={
+                            p.estoque[0]?.quantidade === 0
+                              ? "destructive"
+                              : p.estoque[0]?.quantidade < 10
+                              ? "outline"
+                              : "secondary"
+                          }
+                          className="cursor-pointer transition-all duration-300"
+                          onClick={() => setEditandoEstoque(p.id)}
+                        >
+                          {p.estoque[0]?.quantidade ?? 0} unid.
+                        </Badge>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-6 w-6 p-0 transition-transform active:scale-90 hover:bg-red-50"
+                          onClick={() => {
+                            const novaQuantidade = Math.max(
+                              0,
+                              (p.estoque[0]?.quantidade ?? 0) - 1
+                            );
+                            atualizarEstoque(p.id, novaQuantidade);
+                          }}
+                        >
+                          -
+                        </Button>
+                      </div>
                     </TableCell>
 
                     <TableCell className="text-right text-blue-700 font-medium">
@@ -417,6 +474,45 @@ export default function MedicamentosPage() {
           </Table>
         </div>
       )}
+
+      {/* Modal de Edição de Estoque */}
+      <Dialog
+        open={editandoEstoque !== null}
+        onOpenChange={(open) => !open && setEditandoEstoque(null)}
+      >
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Editar Estoque</DialogTitle>
+          </DialogHeader>
+          {editandoEstoque && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Quantidade em Estoque</Label>
+                <Input
+                  type="number"
+                  defaultValue={
+                    produtos
+                      .find((p) => p.id === editandoEstoque)
+                      ?.estoque[0]?.quantidade?.toString() ?? "0"
+                  }
+                  onChange={(e) => {
+                    const produto = produtos.find(
+                      (p) => p.id === editandoEstoque
+                    );
+                    if (produto) {
+                      const novaQuantidade = parseInt(e.target.value) || 0;
+                      atualizarEstoque(editandoEstoque, novaQuantidade);
+                    }
+                  }}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setEditandoEstoque(null)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal de Confirmação */}
       <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>

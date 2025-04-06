@@ -128,11 +128,12 @@ model usuario {
 model venda {
   id               BigInt       @id @default(autoincrement())
   created_at       DateTime?    @db.Timestamp(6)
-  data             DateTime?    @db.Date
+  data DateTime? @db.Timestamp(6) // ou @db.DateTime
   total            Decimal?     @db.Decimal(38, 2)
   updated_at       DateTime?    @db.Timestamp(6)
   cliente_id       BigInt?
   observacao       String?      @db.VarChar(255)
+  status           String       @default("ativa") @db.VarChar(20) // adicione este campo
   status_pagamento String       @default("pendente") @db.VarChar(100) // <-- novo campo
   item_venda       item_venda[]
   pagamento        pagamento[]
