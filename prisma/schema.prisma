@@ -94,10 +94,14 @@ model produto {
   descricao  String?      @db.VarChar(255)
   nome       String?      @db.VarChar(255)
   preco      Decimal?     @db.Decimal(38, 2)
+  miligramas          Int?      // Novo campo
+  quantidade_capsulas Int?      // Novo campo
   updated_at DateTime?    @db.Timestamp(6)
   categoria  String?      @db.VarChar(255)
   estoque    estoque[]
   item_venda item_venda[]
+  historicoEstoque    EstoqueHistorico[] // Relação adicionada
+
 }
 
 model profissao {
@@ -140,4 +144,28 @@ model venda {
   cliente          cliente?     @relation(fields: [cliente_id], references: [id])
 }
 
+model MetricasDiarias {
+  id        BigInt    @id @default(autoincrement())
+  data      DateTime  @unique
+  vendas    Int
+  clientes  Int
+  receita   Decimal   @db.Decimal(10, 2)
+  produtos  Int
+  createdAt DateTime  @default(now())
+}
 
+model TendenciaVendas {
+  id        BigInt    @id @default(autoincrement())
+  periodo   String    @unique // '2023-11' ou '2023-Q3' ou '2023'
+  vendas    Int
+  receita   Decimal   @db.Decimal(10, 2)
+  createdAt DateTime  @default(now())
+}
+
+model EstoqueHistorico {
+  id         BigInt    @id @default(autoincrement())
+  produto_id BigInt
+  quantidade Int
+  data       DateTime  @default(now())
+  produto    produto   @relation(fields: [produto_id], references: [id])
+}

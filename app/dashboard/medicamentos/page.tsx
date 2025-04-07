@@ -57,6 +57,8 @@ export default function MedicamentosPage() {
     preco: "",
     quantidade: "",
     categoria: "analgésico",
+    miligramas: "",
+    quantidade_capsulas: "",
   });
 
   const handleChange = (
@@ -76,11 +78,13 @@ export default function MedicamentosPage() {
       preco: "",
       quantidade: "",
       categoria: "analgésico",
+      miligramas: "",
+      quantidade_capsulas: "",
     });
   };
 
   const handleSubmit = async () => {
-    if (!form.nome || !form.descricao || !form.preco || !form.quantidade) {
+    if (!form.nome || !form.preco || !form.quantidade) {
       toast.error("Preencha todos os campos obrigatórios");
       return;
     }
@@ -98,6 +102,10 @@ export default function MedicamentosPage() {
           preco: parseFloat(form.preco),
           categoria: form.categoria,
           quantidade: parseInt(form.quantidade),
+          miligramas: form.miligramas ? parseInt(form.miligramas) : null,
+          quantidade_capsulas: form.quantidade_capsulas
+            ? parseInt(form.quantidade_capsulas)
+            : null,
         }),
       });
 
@@ -227,7 +235,7 @@ export default function MedicamentosPage() {
             <div className="space-y-4 py-2">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="nome">Nome</Label>
+                  <Label htmlFor="nome">Nome*</Label>
                   <Input
                     id="nome"
                     name="nome"
@@ -266,9 +274,9 @@ export default function MedicamentosPage() {
                   placeholder="Descreva o medicamento"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="preco">Preço (R$)</Label>
+                  <Label htmlFor="preco">Preço (R$)*</Label>
                   <Input
                     id="preco"
                     name="preco"
@@ -280,7 +288,7 @@ export default function MedicamentosPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="quantidade">Estoque</Label>
+                  <Label htmlFor="quantidade">Estoque*</Label>
                   <Input
                     id="quantidade"
                     name="quantidade"
@@ -288,6 +296,32 @@ export default function MedicamentosPage() {
                     value={form.quantidade}
                     onChange={handleChange}
                     placeholder="0"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="miligramas">Miligramas (mg)</Label>
+                  <Input
+                    id="miligramas"
+                    name="miligramas"
+                    type="number"
+                    value={form.miligramas}
+                    onChange={handleChange}
+                    placeholder="Ex: 500"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="quantidade_capsulas">
+                    Quantidade de Cápsulas
+                  </Label>
+                  <Input
+                    id="quantidade_capsulas"
+                    name="quantidade_capsulas"
+                    type="number"
+                    value={form.quantidade_capsulas}
+                    onChange={handleChange}
+                    placeholder="Ex: 10"
                   />
                 </div>
               </div>
@@ -351,7 +385,7 @@ export default function MedicamentosPage() {
             <TableHeader className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
               <TableRow>
                 <TableHead className="font-semibold">Nome</TableHead>
-                <TableHead className="font-semibold">Descrição</TableHead>
+                <TableHead className="font-semibold">Dosagem</TableHead>
                 <TableHead className="font-semibold">Categoria</TableHead>
                 <TableHead className="font-semibold">Estoque</TableHead>
                 <TableHead className="text-right font-semibold">
@@ -376,8 +410,17 @@ export default function MedicamentosPage() {
                       </div>
                     </TableCell>
 
-                    <TableCell className="line-clamp-1 text-muted-foreground">
-                      {p.descricao}
+                    <TableCell>
+                      {p.miligramas ? (
+                        <Badge variant="outline" className="text-xs">
+                          {p.miligramas}mg
+                          {p.quantidade_capsulas
+                            ? ` x ${p.quantidade_capsulas} caps`
+                            : ""}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">-</span>
+                      )}
                     </TableCell>
 
                     <TableCell>
@@ -405,8 +448,8 @@ export default function MedicamentosPage() {
                             p.estoque[0]?.quantidade === 0
                               ? "destructive"
                               : p.estoque[0]?.quantidade < 10
-                              ? "outline"
-                              : "secondary"
+                                ? "outline"
+                                : "secondary"
                           }
                           className="cursor-pointer transition-all duration-300"
                           onClick={() => setEditandoEstoque(p.id)}
@@ -463,7 +506,7 @@ export default function MedicamentosPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
+                  <TableCell colSpan={7} className="h-24 text-center">
                     {searchTerm
                       ? "Nenhum medicamento encontrado"
                       : "Nenhum medicamento cadastrado"}
@@ -577,26 +620,41 @@ export default function MedicamentosPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
+                  <Label>Dosagem</Label>
+                  <p>
+                    {produtoDetalhado.miligramas ? (
+                      <Badge variant="outline" className="text-xs">
+                        {produtoDetalhado.miligramas}mg
+                        {produtoDetalhado.quantidade_capsulas
+                          ? ` x ${produtoDetalhado.quantidade_capsulas} caps`
+                          : ""}
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground text-xs">-</span>
+                    )}
+                  </p>
+                </div>
+                <div>
                   <Label>Preço</Label>
                   <p className="text-blue-700 font-semibold">
                     R$ {produtoDetalhado.preco.toFixed(2).replace(".", ",")}
                   </p>
                 </div>
-                <div>
-                  <Label>Estoque</Label>
-                  <Badge
-                    variant={
-                      produtoDetalhado.estoque[0]?.quantidade === 0
-                        ? "destructive"
-                        : produtoDetalhado.estoque[0]?.quantidade < 10
+              </div>
+              <div>
+                <Label>Estoque</Label>
+                <Badge
+                  variant={
+                    produtoDetalhado.estoque[0]?.quantidade === 0
+                      ? "destructive"
+                      : produtoDetalhado.estoque[0]?.quantidade < 10
                         ? "outline"
                         : "secondary"
-                    }
-                    className="text-xs"
-                  >
-                    {produtoDetalhado.estoque[0]?.quantidade ?? 0} unid.
-                  </Badge>
-                </div>
+                  }
+                  className="text-xs"
+                >
+                  {produtoDetalhado.estoque[0]?.quantidade ?? 0} unid.
+                </Badge>
               </div>
             </div>
           )}

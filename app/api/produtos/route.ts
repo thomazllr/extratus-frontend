@@ -12,10 +12,12 @@ export async function GET() {
     },
   });
 
-  // 👇 Transforma preco de Decimal para number
+  // 👇 Transforma preco de Decimal para number e inclui os novos campos
   const produtosConvertidos = produtos.map((p) => ({
     ...p,
     preco: parseFloat(p.preco?.toString() || "0"),
+    miligramas: p.miligramas ?? null,
+    quantidade_capsulas: p.quantidade_capsulas ?? null,
     estoque: p.estoque.map((e) => ({
       ...e,
       quantidade: e.quantidade ?? 0,
@@ -28,7 +30,15 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { nome, descricao, preco, categoria, quantidade } = body;
+    const {
+      nome,
+      descricao,
+      preco,
+      categoria,
+      quantidade,
+      miligramas,
+      quantidade_capsulas,
+    } = body;
 
     if (!nome || !preco || quantidade == null) {
       return NextResponse.json(
@@ -43,6 +53,8 @@ export async function POST(req: Request) {
         descricao,
         preco,
         categoria,
+        miligramas,
+        quantidade_capsulas,
         created_at: new Date(),
         updated_at: new Date(),
         estoque: {
@@ -62,6 +74,8 @@ export async function POST(req: Request) {
     const produtoConvertido = {
       ...novoProduto,
       preco: parseFloat(novoProduto.preco?.toString() || "0"),
+      miligramas: novoProduto.miligramas ?? null,
+      quantidade_capsulas: novoProduto.quantidade_capsulas ?? null,
       estoque: novoProduto.estoque.map((e) => ({
         ...e,
         quantidade: e.quantidade ?? 0,
@@ -77,4 +91,3 @@ export async function POST(req: Request) {
     );
   }
 }
-

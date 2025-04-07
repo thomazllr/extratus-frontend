@@ -8,7 +8,7 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: paramId } = await context.params; // ✅ corrigido
+    const { id: paramId } = await context.params;
     const id = parseInt(paramId);
 
     if (!id) {
@@ -23,7 +23,14 @@ export async function DELETE(
     return await prisma.$transaction(async (tx) => {
       const venda = await tx.venda.findUnique({
         where: { id: vendaId },
-        include: { item_venda: true, pagamento: true },
+        include: {
+          item_venda: {
+            include: {
+              produto: true, // Incluímos o produto para ter o nome nos logs
+            },
+          },
+          pagamento: true,
+        },
       });
 
       if (!venda) {
@@ -40,24 +47,57 @@ export async function DELETE(
         );
       }
 
+      // Primeiro verificar se todos os itens têm estoque registrado
       for (const item of venda.item_venda) {
-        await tx.estoque.upsert({
-          where: { id: item.produto_id! }, // If 'id' is your primary key
-          // OR use a compound unique identifier if defined in your schema:
-          // where: { produto_id_unique: item.produto_id! },
-          update: {
-            quantidade: { increment: item.quantidade ?? 0 },
-            updated_at: new Date(),
-          },
-          create: {
-            produto_id: item.produto_id!,
-            quantidade: item.quantidade,
-            created_at: new Date(),
-            updated_at: new Date(),
+        if (!item.produto_id) {
+          return NextResponse.json(
+            {
+              sucesso: false,
+              mensagem: `Item ${item.id} não tem produto associado.`,
+            },
+            { status: 400 }
+          );
+        }
+      }
+
+      // Processar cada item da venda
+      for (const item of venda.item_venda) {
+        // 1. Encontrar o registro de estoque existente para o produto
+        const estoqueExistente = await tx.estoque.findFirst({
+          where: { produto_id: item.produto_id },
+        });
+
+        // 2. Atualizar ou criar o estoque
+        if (estoqueExistente) {
+          await tx.estoque.update({
+            where: { id: estoqueExistente.id },
+            data: {
+              quantidade: { increment: item.quantidade ?? 0 },
+              updated_at: new Date(),
+            },
+          });
+        } else {
+          await tx.estoque.create({
+            data: {
+              produto_id: item.produto_id,
+              quantidade: item.quantidade ?? 0,
+              created_at: new Date(),
+              updated_at: new Date(),
+            },
+          });
+        }
+
+        // 3. Registrar no histórico de estoque (opcional)
+        await tx.estoqueHistorico.create({
+          data: {
+            produto_id: Number(item.produto_id),
+            quantidade: item.quantidade ?? 0, // Positivo para entrada
+            data: new Date(),
           },
         });
       }
 
+      // Atualizar status da venda
       await tx.venda.update({
         where: { id: vendaId },
         data: {
@@ -70,6 +110,10 @@ export async function DELETE(
       return NextResponse.json({
         sucesso: true,
         mensagem: "Venda cancelada com sucesso e estoque reabastecido.",
+        dados: {
+          vendaId: venda.id,
+          itensProcessados: venda.item_venda.length,
+        },
       });
     });
   } catch (error: any) {
@@ -78,6 +122,8 @@ export async function DELETE(
       {
         sucesso: false,
         mensagem: error.message || "Erro ao cancelar venda.",
+        detalhes:
+          process.env.NODE_ENV === "development" ? error.stack : undefined,
       },
       { status: 500 }
     );

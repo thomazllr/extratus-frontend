@@ -180,6 +180,7 @@ export default function EstoquePage() {
           valor: total,
           tipo_pagamento_id: tipoPagamentoId,
         },
+        enviar_email: statusPagamento === "pago",
       };
 
       const res = await fetch("/api/estoque", {
@@ -191,7 +192,11 @@ export default function EstoquePage() {
       const data = await res.json();
 
       if (res.ok) {
-        toast.success("Movimentação registrada com sucesso!");
+        toast.success(
+          statusPagamento === "pago"
+            ? "Venda registrada e e-mail enviado com sucesso!"
+            : "Venda registrada com sucesso!"
+        );
         setOpenDialog(false);
         resetForm();
         carregarMovimentacoes();
@@ -206,28 +211,42 @@ export default function EstoquePage() {
     }
   };
 
-  // Função para atualizar status de pagamento
-  const atualizarStatusPagamento = async (id: number, novoStatus: string) => {
+  type AtualizarStatusResponse = {
+    mensagem: string;
+  };
+
+  const atualizarStatusPagamento = async (
+    id: number,
+    novoStatus: string
+  ): Promise<AtualizarStatusResponse> => {
     try {
       const res = await fetch(`/api/estoque/${id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status_pagamento: novoStatus }),
+        body: JSON.stringify({
+          status_pagamento: novoStatus,
+          enviar_email: true,
+        }),
       });
 
+      const data = await res.json();
+
       if (res.ok) {
-        toast.success("Status atualizado com sucesso!");
+        toast.success(
+          data.mensagem || "Status atualizado e e-mail enviado com sucesso!"
+        );
         carregarMovimentacoes();
+        return data;
       } else {
-        const data = await res.json();
         toast.error(data.mensagem || "Erro ao atualizar status.");
+        throw new Error(data.mensagem || "Erro ao atualizar status.");
       }
     } catch (error) {
       console.error("Erro ao atualizar status:", error);
       toast.error("Erro ao atualizar status.");
+      throw error;
     }
   };
-
   // Função para excluir movimentação
   const excluirMovimentacao = async (id: number) => {
     if (!confirm("Tem certeza que deseja excluir esta movimentação?")) return;
@@ -529,12 +548,21 @@ export default function EstoquePage() {
                           variant="outline"
                           size="sm"
                           className="h-8 gap-1 text-green-600 border-green-300 hover:bg-green-50"
-                          onClick={() =>
-                            atualizarStatusPagamento(mov.id, "pago")
-                          }
+                          onClick={() => {
+                            toast.promise(
+                              atualizarStatusPagamento(mov.id, "pago"),
+                              {
+                                loading: "Confirmando pagamento...",
+                                success: (data) =>
+                                  data?.mensagem ||
+                                  "Pagamento confirmado com sucesso!",
+                                error: "Erro ao confirmar pagamento",
+                              }
+                            );
+                          }}
                         >
                           <Check className="h-3 w-3" />
-                          <span>Marcar como pago</span>
+                          <span>Confirmar Pagamento</span>
                         </Button>
                       )}
                       {mov.status_pagamento === "pago" && (

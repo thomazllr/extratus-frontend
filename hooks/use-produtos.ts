@@ -6,6 +6,8 @@ export interface Produto {
   descricao: string;
   preco: number;
   categoria: string;
+  miligramas: number | null;
+  quantidade_capsulas: number | null;
   estoque: {
     id: number;
     quantidade: number;
