@@ -49,6 +49,7 @@ export default function ClientesPage() {
   const [telefone, setTelefone] = useState("");
   const [endereco, setEndereco] = useState("");
   const [doencas, setDoencas] = useState([]);
+  const [cpf, setCpf] = useState("");
   const [doencasSelecionadas, setDoencasSelecionadas] = useState<number[]>([]);
 
   // Estados da tabela e dados
@@ -70,6 +71,7 @@ export default function ClientesPage() {
     email: false,
     telefone: false,
     endereco: false,
+    cpf: false,
   });
 
   // Buscar dados iniciais
@@ -94,11 +96,14 @@ export default function ClientesPage() {
 
   // Validar formulário
   const validateForm = () => {
+    const cpfLimpo = cpf.replace(/\D/g, ""); // remove tudo que não for número
+
     const errors = {
       nome: nome.trim() === "",
       email: !/^\S+@\S+\.\S+$/.test(email),
       telefone: telefone.trim() === "",
       endereco: endereco.trim() === "",
+      cpf: cpfLimpo.trim().length !== 11, // ou use uma função de validação mais robusta se quiser
     };
     setFormErrors(errors);
     return !Object.values(errors).some(Boolean);
@@ -125,6 +130,7 @@ export default function ClientesPage() {
             email,
             telefone,
             endereco,
+            cpf,
             doencas: doencasSelecionadas,
           }),
         }
@@ -159,6 +165,7 @@ export default function ClientesPage() {
     setEmail("");
     setTelefone("");
     setEndereco("");
+    setCpf("");
     setDoencasSelecionadas([]);
     setClienteSelecionado(null);
     setFormErrors({
@@ -166,6 +173,7 @@ export default function ClientesPage() {
       email: false,
       telefone: false,
       endereco: false,
+      cpf: false,
     });
   };
 
@@ -191,6 +199,7 @@ export default function ClientesPage() {
     setEmail(cliente.email);
     setTelefone(cliente.telefone);
     setEndereco(cliente.endereco);
+    setCpf(cliente.cpf); // <-- ADICIONE ESTA LINHA
     setDoencasSelecionadas(
       cliente.doenca_cliente?.map((d: any) => d.doenca_id) || []
     );
@@ -293,6 +302,19 @@ export default function ClientesPage() {
                   )}
                 </div>
 
+                <div className="space-y-2">
+                  <Input
+                    id="cpf"
+                    placeholder="CPF*"
+                    value={cpf}
+                    onChange={(e) => setCpf(e.target.value)}
+                    className={formErrors.cpf ? "border-red-500" : ""}
+                  />
+                  {formErrors.cpf && (
+                    <p className="text-sm text-red-500">CPF inválido</p>
+                  )}
+                </div>
+
                 <div className="grid gap-2">
                   <label className="text-sm font-medium">Doenças</label>
                   <div className="grid gap-2 max-h-40 overflow-y-auto border rounded p-2">
@@ -318,6 +340,15 @@ export default function ClientesPage() {
                 </div>
               </div>
               <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={resetForm}
+                  disabled={isLoading}
+                >
+                  Limpar
+                </Button>
+
                 <Button
                   onClick={handleSubmit}
                   className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white"
@@ -535,6 +566,13 @@ export default function ClientesPage() {
                       Endereço
                     </h4>
                     <p className="text-sm">{clienteParaVisualizar.endereco}</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h4 className="font-medium flex items-center gap-2">
+                      <span className="text-blue-500 font-bold">CPF</span>
+                    </h4>
+                    <p className="text-sm">{clienteParaVisualizar.cpf}</p>
                   </div>
 
                   <div className="space-y-2">

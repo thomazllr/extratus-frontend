@@ -92,7 +92,7 @@ export default function LoginForm() {
       <CardHeader>
         <CardTitle>Login</CardTitle>
         <CardDescription>
-          Entre com seu CPF e senha Para acessar o sistema
+          Entre com seu CPF e senha para acessar o sistema
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>

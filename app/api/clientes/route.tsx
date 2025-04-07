@@ -15,6 +15,7 @@ export async function POST(request: Request) {
         email: data.email,
         telefone: data.telefone,
         endereco: data.endereco,
+        cpf: data.cpf,
         created_at: new Date(),
         updated_at: new Date(),
       },

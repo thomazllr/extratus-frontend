@@ -28,26 +28,45 @@ type DashboardData = {
   categoriasVendidas?: Array<{ categoria: string; quantidade: number }>;
   statusPagamento?: Array<{ status: string; quantidade: number }>;
   estoqueHistorico?: Array<{
-    id: number | string;
+    id: number;
     nome: string;
-    historico: Array<{ data: string; quantidade: number }>;
+    historico: Array<{ data: Date; quantidade: number }>;
+  }>;
+  produtosMaisVendidos?: Array<{
+    id: number;
+    nome: string;
+    quantidade: number;
+    valor_total: number;
+    estoque_restante: number;
+  }>;
+  // Novo tipo para relatórios
+  relatorios?: Array<{
+    id: number;
+    data: Date | string;
+    cliente: {
+      id: number | null;
+      nome: string;
+      cpf: string;
+    };
+    total: number;
+    status: string;
+    itens: number;
+    formaPagamento: string;
+    produtos: Array<{
+      id: number | null;
+      nome: string;
+      quantidade: number;
+      preco: number;
+      categoria: string;
+    }>;
   }>;
 };
-
 type DashboardAnalyticsProps = {
   data: DashboardData;
 };
 
 export function DashboardAnalytics({ data }: DashboardAnalyticsProps) {
-  const { data: dashboardData, isLoading } = useQuery({
-    queryKey: ["dashboard-metrics"],
-    queryFn: async () => {
-      const res = await fetch("/api/dashboard");
-      return res.json();
-    },
-  });
-
-  if (isLoading) {
+  if (!data) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {[...Array(6)].map((_, i) => (
@@ -68,14 +87,14 @@ export function DashboardAnalytics({ data }: DashboardAnalyticsProps) {
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {/* Gráfico 1: Vendas por dia */}
+      {/* Gráfico 1: Vendas Diárias */}
       <Card>
         <CardHeader>
           <CardTitle>Vendas Diárias (Últimos 30 dias)</CardTitle>
         </CardHeader>
         <CardContent className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={dashboardData?.vendasDiarias}>
+            <BarChart data={data.vendasDiarias || []}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="data" />
               <YAxis />
@@ -89,34 +108,6 @@ export function DashboardAnalytics({ data }: DashboardAnalyticsProps) {
       </Card>
 
       {/* Gráfico 2: Tendência de vendas */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Tendência de Vendas</CardTitle>
-        </CardHeader>
-        <CardContent className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={dashboardData?.tendenciaVendas}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="periodo" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="vendas"
-                stroke="#8884d8"
-                name="Vendas"
-              />
-              <Line
-                type="monotone"
-                dataKey="receita"
-                stroke="#82ca9d"
-                name="Receita (R$)"
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
 
       {/* Gráfico 3: Categorias mais vendidas */}
       <Card>
@@ -126,28 +117,37 @@ export function DashboardAnalytics({ data }: DashboardAnalyticsProps) {
         <CardContent className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              <Pie
-                data={dashboardData?.categoriasVendidas}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="quantidade"
-                nameKey="categoria"
-                label={({ name, percent }) =>
-                  `${name}: ${(percent * 100).toFixed(0)}%`
-                }
-              >
-                {dashboardData?.categoriasVendidas.map(
-                  (entry: any, index: number) => (
+              {data.categoriasVendidas && data.categoriasVendidas.length > 0 ? (
+                <Pie
+                  data={data.categoriasVendidas}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="quantidade"
+                  nameKey="categoria"
+                  label={({ name, percent }) =>
+                    `${name}: ${(percent * 100).toFixed(0)}%`
+                  }
+                >
+                  {data.categoriasVendidas.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={COLORS[index % COLORS.length]}
                     />
-                  )
-                )}
-              </Pie>
+                  ))}
+                </Pie>
+              ) : (
+                <text
+                  x="50%"
+                  y="50%"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                >
+                  Sem dados disponíveis
+                </text>
+              )}
               <Tooltip />
             </PieChart>
           </ResponsiveContainer>
@@ -162,28 +162,37 @@ export function DashboardAnalytics({ data }: DashboardAnalyticsProps) {
         <CardContent className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              <Pie
-                data={dashboardData?.statusPagamento}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="quantidade"
-                nameKey="status"
-                label={({ name, percent }) =>
-                  `${name}: ${(percent * 100).toFixed(0)}%`
-                }
-              >
-                {dashboardData?.statusPagamento.map(
-                  (entry: any, index: number) => (
+              {data.statusPagamento && data.statusPagamento.length > 0 ? (
+                <Pie
+                  data={data.statusPagamento}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="quantidade"
+                  nameKey="status"
+                  label={({ name, percent }) =>
+                    `${name}: ${(percent * 100).toFixed(0)}%`
+                  }
+                >
+                  {data.statusPagamento.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={COLORS[index % COLORS.length]}
                     />
-                  )
-                )}
-              </Pie>
+                  ))}
+                </Pie>
+              ) : (
+                <text
+                  x="50%"
+                  y="50%"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                >
+                  Sem dados disponíveis
+                </text>
+              )}
               <Tooltip />
             </PieChart>
           </ResponsiveContainer>
@@ -199,7 +208,7 @@ export function DashboardAnalytics({ data }: DashboardAnalyticsProps) {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               layout="vertical"
-              data={dashboardData?.topClientes}
+              data={(data.topClientes || []).slice(0, 10)}
               margin={{ left: 40 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
@@ -219,16 +228,15 @@ export function DashboardAnalytics({ data }: DashboardAnalyticsProps) {
           <CardTitle>Histórico de Estoque (Últimos 30 dias)</CardTitle>
         </CardHeader>
         <CardContent className="h-[400px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="data" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              {dashboardData?.estoqueHistorico
-                .slice(0, 5)
-                .map((produto: any, index: number) => (
+          {data.estoqueHistorico && data.estoqueHistorico.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis allowDuplicatedCategory={false} dataKey="data" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                {data.estoqueHistorico.slice(0, 5).map((produto, index) => (
                   <Line
                     key={produto.id}
                     type="monotone"
@@ -238,8 +246,15 @@ export function DashboardAnalytics({ data }: DashboardAnalyticsProps) {
                     stroke={COLORS[index % COLORS.length]}
                   />
                 ))}
-            </LineChart>
-          </ResponsiveContainer>
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <p className="text-muted-foreground">
+                Nenhum dado de histórico disponível
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

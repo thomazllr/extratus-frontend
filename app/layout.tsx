@@ -13,31 +13,22 @@ const geistMono = Geist_Mono({
 });
 
 type Locale = "pt" | "en";
-type Params = Promise<{ lang: Locale }>;
+type Params = { lang: Locale };
 
-export async function generateMetadata(props: {
-  params: Params;
-}): Promise<Metadata> {
-  const params = await props.params;
-  const { lang } = params;
-
+export function generateMetadata(): Metadata {
   return {
-    title: `Page in ${lang}`,
-    description: `Content in ${lang} language`,
+    title: `Extratus`,
+    description: `Painel principal do sistema`,
   };
 }
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
-  params,
 }: {
   children: React.ReactNode;
-  params: Params;
 }) {
-  const { lang } = await params;
-
   return (
-    <html lang={lang} className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="pt" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>{children}</body>
     </html>
   );
