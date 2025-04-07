@@ -100,7 +100,9 @@ export default function Sidebar({ className }: SidebarProps) {
         <div className="flex h-14 items-center border-b px-4">
           <Link href="/dashboard" className="flex items-center gap-2">
             <Pill className="h-6 w-6 text-teal-600" />
-            <span className="text-lg font-bold text-teal-700">Extratus</span>
+            <span className="text-lg font-bold text-teal-700">
+              Extratus- TO
+            </span>
           </Link>
         </div>
         <ScrollArea className="flex-1 py-4">

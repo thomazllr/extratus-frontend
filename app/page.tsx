@@ -10,7 +10,7 @@ export default function Home() {
             <ShieldCheck className="h-12 w-12 text-teal-600" />
           </div>
           <h1 className="text-4xl font-extrabold text-teal-800 tracking-tight">
-            Extratus
+            DS Extractus TOCANTINS
           </h1>
           <p className="mt-1 text-gray-600 text-sm">
             Sistema de Gestão de Estoque de Remédios
@@ -20,7 +20,7 @@ export default function Home() {
         <LoginForm />
 
         <p className="text-center text-xs text-gray-400">
-          &copy; {new Date().getFullYear()} Extratus. Todos os direitos
+          &copy; {new Date().getFullYear()} Extractus. Todos os direitos
           reservados.
         </p>
       </div>

@@ -11,11 +11,15 @@ datasource db {
 model cliente {
   id                 BigInt               @id @default(autoincrement())
   cpf                String?              @db.VarChar(255)
+  cep                String?              @db.VarChar(20) // ⬅ novo campo
   created_at         DateTime?            @db.Timestamp(6)
   data_nascimento    DateTime?            @db.Date
   email              String?              @db.VarChar(255)
   endereco           String?              @db.VarChar(255)
   nome               String?              @db.VarChar(255)
+  peso               Decimal?  @db.Decimal(5, 2) // exemplo: 72.50 kg
+  altura             Decimal?  @db.Decimal(4, 2) // exemplo: 1.75 m
+  queixas_principais String?   @db.VarChar(500)
   telefone           String?              @db.VarChar(255)
   updated_at         DateTime?            @db.Timestamp(6)
   cliente_profissoes cliente_profissoes[] @ignore

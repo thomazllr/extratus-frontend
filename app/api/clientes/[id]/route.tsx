@@ -51,6 +51,11 @@ export async function PUT(
         email: data.email,
         telefone: data.telefone,
         endereco: data.endereco,
+        peso: data.peso,
+        altura: data.altura,
+        cpf: data.cpf,
+        cep: data.cep,
+        queixas_principais: data.queixas_principais || null,
         updated_at: new Date(),
       },
     });

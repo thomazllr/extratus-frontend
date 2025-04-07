@@ -64,6 +64,10 @@ export default function ClientesPage() {
   const [clienteParaExcluir, setClienteParaExcluir] = useState<any>(null);
   const [excluindo, setExcluindo] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [cep, setCep] = useState("");
+  const [peso, setPeso] = useState("");
+  const [altura, setAltura] = useState("");
+  const [queixas, setQueixas] = useState("");
 
   // Estados de validação
   const [formErrors, setFormErrors] = useState({
@@ -131,6 +135,10 @@ export default function ClientesPage() {
             telefone,
             endereco,
             cpf,
+            cep,
+            peso: parseFloat(peso),
+            altura: parseFloat(altura),
+            queixas_principais: queixas,
             doencas: doencasSelecionadas,
           }),
         }
@@ -166,6 +174,10 @@ export default function ClientesPage() {
     setTelefone("");
     setEndereco("");
     setCpf("");
+    setCep("");
+    setPeso("");
+    setAltura("");
+    setQueixas("");
     setDoencasSelecionadas([]);
     setClienteSelecionado(null);
     setFormErrors({
@@ -200,6 +212,10 @@ export default function ClientesPage() {
     setTelefone(cliente.telefone);
     setEndereco(cliente.endereco);
     setCpf(cliente.cpf); // <-- ADICIONE ESTA LINHA
+    setCep(cliente.cep); // <-- ADICIONE ESTA LINHA
+    setPeso(cliente.peso || "");
+    setAltura(cliente.altura || "");
+    setQueixas(cliente.queixas_principais || "");
     setDoencasSelecionadas(
       cliente.doenca_cliente?.map((d: any) => d.doenca_id) || []
     );
@@ -289,21 +305,6 @@ export default function ClientesPage() {
 
                 <div className="space-y-2">
                   <Input
-                    id="endereco"
-                    placeholder="Endereço*"
-                    value={endereco}
-                    onChange={(e) => setEndereco(e.target.value)}
-                    className={formErrors.endereco ? "border-red-500" : ""}
-                  />
-                  {formErrors.endereco && (
-                    <p className="text-sm text-red-500">
-                      Endereço é obrigatório
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Input
                     id="cpf"
                     placeholder="CPF*"
                     value={cpf}
@@ -313,6 +314,75 @@ export default function ClientesPage() {
                   {formErrors.cpf && (
                     <p className="text-sm text-red-500">CPF inválido</p>
                   )}
+                </div>
+
+                <div className="space-y-2">
+                  <Input
+                    id="cep"
+                    placeholder="CEP*"
+                    value={cep}
+                    onChange={(e) => {
+                      const rawCep = e.target.value.replace(/\D/g, "");
+                      setCep(rawCep);
+                      if (rawCep.length === 8) {
+                        fetch(`https://viacep.com.br/ws/${rawCep}/json/`)
+                          .then((res) => res.json())
+                          .then((data) => {
+                            if (!data.erro) {
+                              setEndereco(
+                                `${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}`
+                              );
+                              toast.success(
+                                "Endereço preenchido automaticamente!"
+                              );
+                            } else {
+                              toast.error("CEP não encontrado");
+                            }
+                          })
+                          .catch(() => toast.error("Erro ao buscar CEP"));
+                      }
+                    }}
+                    className={formErrors.endereco ? "border-red-500" : ""}
+                  />
+                </div>
+
+                <div className="relative">
+                  <Input
+                    id="peso"
+                    type="number"
+                    step="0.01"
+                    placeholder="Peso"
+                    value={peso}
+                    onChange={(e) => setPeso(e.target.value)}
+                    className="pr-14"
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <span className="text-muted-foreground text-sm">kg</span>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <Input
+                    id="altura"
+                    type="number"
+                    step="0.01"
+                    placeholder="Altura"
+                    value={altura}
+                    onChange={(e) => setAltura(e.target.value)}
+                    className="pr-14"
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <span className="text-muted-foreground text-sm">m</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Input
+                    id="queixas"
+                    placeholder="Queixas principais"
+                    value={queixas}
+                    onChange={(e) => setQueixas(e.target.value)}
+                  />
                 </div>
 
                 <div className="grid gap-2">
@@ -361,22 +431,32 @@ export default function ClientesPage() {
           </Dialog>
         </div>
       </div>
-
       {/* Tabela de Clientes */}
       {isLoading ? (
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
         </div>
       ) : (
-        <div className="rounded-lg border shadow-sm bg-white dark:bg-gray-900 overflow-hidden">
+        <div className="rounded-lg border shadow-sm bg-white dark:bg-gray-900 overflow-auto">
           <Table>
             <TableHeader className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
               <TableRow>
-                <TableHead className="w-[300px] font-semibold">
+                <TableHead className="min-w-[200px] font-semibold">
                   Cliente
                 </TableHead>
-                <TableHead className="font-semibold">Contato</TableHead>
-                <TableHead className="font-semibold">Doenças</TableHead>
+                <TableHead className="min-w-[180px] font-semibold">
+                  Contato
+                </TableHead>
+                <TableHead className="min-w-[180px] font-semibold">
+                  Doenças
+                </TableHead>
+                <TableHead className="font-semibold">CPF</TableHead>
+                <TableHead className="font-semibold">CEP</TableHead>
+                <TableHead className="font-semibold">Peso</TableHead>
+                <TableHead className="font-semibold">Altura</TableHead>
+                <TableHead className="min-w-[220px] font-semibold">
+                  Queixas
+                </TableHead>
                 <TableHead className="text-right font-semibold">
                   Ações
                 </TableHead>
@@ -446,6 +526,20 @@ export default function ClientesPage() {
                       </div>
                     </TableCell>
 
+                    <TableCell>{cliente.cpf}</TableCell>
+                    <TableCell>{cliente.cep}</TableCell>
+                    <TableCell>
+                      {cliente.peso ? `${cliente.peso} kg` : "—"}
+                    </TableCell>
+                    <TableCell>
+                      {cliente.altura ? `${cliente.altura} m` : "—"}
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm text-muted-foreground truncate block max-w-[200px]">
+                        {cliente.queixas_principais || "Nenhuma"}
+                      </span>
+                    </TableCell>
+
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -491,7 +585,7 @@ export default function ClientesPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} className="h-24 text-center">
+                  <TableCell colSpan={9} className="h-24 text-center">
                     {searchTerm
                       ? "Nenhum cliente encontrado"
                       : "Nenhum cliente cadastrado"}
@@ -576,6 +670,36 @@ export default function ClientesPage() {
                   </div>
 
                   <div className="space-y-2">
+                    <h4 className="font-medium flex items-center gap-2">
+                      <span className="text-blue-500 font-bold">Peso</span>
+                    </h4>
+                    <p className="text-sm">
+                      {clienteParaVisualizar.peso ?? "Não informado"} kg
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h4 className="font-medium flex items-center gap-2">
+                      <span className="text-blue-500 font-bold">Altura</span>
+                    </h4>
+                    <p className="text-sm">
+                      {clienteParaVisualizar.altura ?? "Não informada"} m
+                    </p>
+                  </div>
+
+                  <div className="md:col-span-2 space-y-2">
+                    <h4 className="font-medium flex items-center gap-2">
+                      <span className="text-blue-500 font-bold">
+                        Queixas Principais
+                      </span>
+                    </h4>
+                    <p className="text-sm">
+                      {clienteParaVisualizar.queixas_principais ||
+                        "Nenhuma registrada"}
+                    </p>
+                  </div>
+
+                  <div className="md:col-span-2 space-y-2">
                     <h4 className="font-medium">Doenças</h4>
                     <div className="flex flex-col gap-2">
                       {clienteParaVisualizar.doencas?.length > 0 ? (
@@ -658,6 +782,28 @@ export default function ClientesPage() {
 
             <div className="space-y-2">
               <Input
+                id="edit-cpf"
+                placeholder="CPF*"
+                value={cpf}
+                onChange={(e) => setCpf(e.target.value)}
+                className={formErrors.cpf ? "border-red-500" : ""}
+              />
+              {formErrors.cpf && (
+                <p className="text-sm text-red-500">CPF inválido</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Input
+                id="edit-cep"
+                placeholder="CEP"
+                value={cep}
+                onChange={(e) => setCep(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Input
                 id="edit-endereco"
                 placeholder="Endereço*"
                 value={endereco}
@@ -667,6 +813,45 @@ export default function ClientesPage() {
               {formErrors.endereco && (
                 <p className="text-sm text-red-500">Endereço é obrigatório</p>
               )}
+            </div>
+
+            <div className="relative space-y-2">
+              <Input
+                id="edit-peso"
+                placeholder="Peso"
+                type="number"
+                step="0.01"
+                value={peso}
+                onChange={(e) => setPeso(e.target.value)}
+                className="pr-14"
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <span className="text-muted-foreground text-sm">kg</span>
+              </div>
+            </div>
+
+            <div className="relative space-y-2">
+              <Input
+                id="edit-altura"
+                placeholder="Altura"
+                type="number"
+                step="0.01"
+                value={altura}
+                onChange={(e) => setAltura(e.target.value)}
+                className="pr-14"
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <span className="text-muted-foreground text-sm">m</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Input
+                id="edit-queixas"
+                placeholder="Queixas principais"
+                value={queixas}
+                onChange={(e) => setQueixas(e.target.value)}
+              />
             </div>
 
             <div className="grid gap-2">
@@ -690,6 +875,7 @@ export default function ClientesPage() {
               </div>
             </div>
           </div>
+
           <DialogFooter className="gap-2">
             <Button
               variant="outline"

@@ -56,7 +56,7 @@ export default function MedicamentosPage() {
     descricao: "",
     preco: "",
     quantidade: "",
-    categoria: "analgésico",
+    categoria: "suplemento",
     miligramas: "",
     quantidade_capsulas: "",
   });
@@ -77,7 +77,7 @@ export default function MedicamentosPage() {
       descricao: "",
       preco: "",
       quantidade: "",
-      categoria: "analgésico",
+      categoria: "suplemento",
       miligramas: "",
       quantidade_capsulas: "",
     });
@@ -197,7 +197,7 @@ export default function MedicamentosPage() {
         return "bg-blue-100 text-blue-800";
       case "antibiótico":
         return "bg-purple-100 text-purple-800";
-      case "anti-inflamatório":
+      case "suplemento":
         return "bg-orange-100 text-orange-800";
       default:
         return "bg-gray-100 text-gray-800";
@@ -254,11 +254,7 @@ export default function MedicamentosPage() {
                       <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="analgésico">Analgésico</SelectItem>
-                      <SelectItem value="antibiótico">Antibiótico</SelectItem>
-                      <SelectItem value="anti-inflamatório">
-                        Anti-inflamatório
-                      </SelectItem>
+                      <SelectItem value="suplementos">Suplementos</SelectItem>
                       <SelectItem value="outros">Outros</SelectItem>
                     </SelectContent>
                   </Select>
