@@ -78,11 +78,6 @@ export default function Sidebar({ className }: SidebarProps) {
       icon: Users,
       title: "Clientes",
     },
-    {
-      href: "/dashboard/relatorios",
-      icon: FileText,
-      title: "Relatórios",
-    },
   ];
 
   return (
