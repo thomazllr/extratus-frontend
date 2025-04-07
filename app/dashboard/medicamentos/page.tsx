@@ -213,7 +213,7 @@ export default function MedicamentosPage() {
             Medicamentos
           </h1>
           <p className="text-muted-foreground mt-1">
-            Gerencie o catálogo de medicamentos da farmácia
+            Gerencie o catálogo de produtos
           </p>
         </div>
 
